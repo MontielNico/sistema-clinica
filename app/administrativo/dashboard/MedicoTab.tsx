@@ -1,17 +1,12 @@
 "use client";
 
 import React from "react";
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TabsContent } from "@/components/ui/tabs";
-import {
-  UserPlus,
-  Heart,
-} from "lucide-react";
-
-
+import { UserPlus, Heart } from "lucide-react";
 
 async function getMedicos() {
   try {
@@ -31,24 +26,28 @@ async function getMedicos() {
   }
 }
 
-export default function  MedicoTab  () {
- const [allMedicos, setAllMedicos] = useState<any[]>([]);
+export default function MedicoTab() {
+  const [allMedicos, setAllMedicos] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
-   useEffect(() => {
-      const fetchMedicos = async () => {
-        const data = await getMedicos();
-        setAllMedicos(Array.isArray(data) ? data : []);
-      };
-  
-      fetchMedicos();
-    }, []);
-  
+  useEffect(() => {
+    const fetchMedicos = async () => {
+      const data = await getMedicos();
+      setAllMedicos(Array.isArray(data) ? data : []);
+    };
+
+    fetchMedicos();
+  }, []);
+
   return (
     <TabsContent value="medicos" className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestión de Médicos</h2>
-        <Button onClick={() => (window.location.href = "/admin/medicos/nuevo")}>
+        <Button
+          onClick={() =>
+            (window.location.href = "../administrativo/medicos/nuevo")
+          }
+        >
           <UserPlus className="h-4 w-4 mr-2" />
           Registrar Nuevo Médico
         </Button>
@@ -64,7 +63,9 @@ export default function  MedicoTab  () {
                     <Heart className="h-4 w-4 text-accent" />
                   </div>
                   <div>
-                    <p className="font-medium">{medico.nombre} {medico.apellido}</p>
+                    <p className="font-medium">
+                      {medico.nombre} {medico.apellido}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {medico.especialidad}
                     </p>
@@ -112,4 +113,4 @@ export default function  MedicoTab  () {
       </div>
     </TabsContent>
   );
-};
+}
