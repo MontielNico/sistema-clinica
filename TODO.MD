@@ -8,3 +8,5 @@
 - [ ] app\paciente\dashboard\StatCards.tsx - arreglar estetica de la hora
 - [ ] MedicoTab y PacienteTab son MUY parecidas, una vez hecho todo podemos arreglar eso.
 - [ ] si hay tiempo podemos agregar el buscar en las tab de  
+- [ ] \app\paciente\components\Agendar.tsx - Conectar el dni del perfil conectado.
+- [ ] 

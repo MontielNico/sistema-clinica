@@ -8,30 +8,21 @@ interface ObraSocial {
 }
 
 
+
 interface ObrasSocialesMedicoProps {
   obrasSociales: ObraSocial[] | undefined;
+  onObraSocialChange?: (obraSocial: string) => void;
 }
 
-const ObrasSocialesMedico = ({ obrasSociales }: ObrasSocialesMedicoProps) => {
+const ObrasSocialesMedico = ({ obrasSociales, onObraSocialChange }: ObrasSocialesMedicoProps) => {
+  const [selected, setSelected] = React.useState<string>("particular");
+
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelected(e.target.value);
+    if (onObraSocialChange) onObraSocialChange(e.target.value);
+  };
+
   return (
-    //      <>
-    //      { obrasSociales?.length === 0 && (<p className="mb-2">El médico solo atiende particular .</p>
-    //      )}
-    //      <label htmlFor="obrasSocialesMedico" className="block mb-1 font-medium">
-    //       Obras Sociales del Médico:
-    //     </label>
-    //     <select
-    //       id="obrasSocialesMedico"
-    //       name="obrasSocialesMedico"
-    //       className="w-full mb-2 p-2 border border-gray-300 rounded"
-    //     >
-    //       {obrasSociales?.map((obraSocial) => (
-    //         <option key={obraSocial.id} value={obraSocial.id}>
-    //           {obraSocial.nombre} 
-    //         </option>
-    //       ))}
-    //     </select>
-    //     </>
     <>
       <label htmlFor="obrasSocialesMedico" className="block mb-1 font-medium">
         Obras Sociales del Médico:
@@ -40,11 +31,18 @@ const ObrasSocialesMedico = ({ obrasSociales }: ObrasSocialesMedicoProps) => {
         id="obrasSocialesMedico"
         name="obrasSocialesMedico"
         className="w-full mb-2 p-2 border border-gray-300 rounded"
+        value={selected}
+        onChange={handleChange}
       >
-        <option > OSDE</option>
-        <option > Swiss Medical</option>
-        <option > Galeno</option>
-        <option> Particular </option>
+        {obrasSociales && obrasSociales.length > 0 ? (
+          obrasSociales.map((obraSocial) => (
+            <option key={obraSocial.id} value={obraSocial.nombre}>
+              {obraSocial.nombre}
+            </option>
+          ))
+        ) : (
+          <option value="null" >Particular</option>
+        )}
       </select>
     </>
   );
