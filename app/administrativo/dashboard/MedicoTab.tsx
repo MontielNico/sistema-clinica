@@ -82,14 +82,14 @@ export default function  MedicoTab  () {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      (window.location.href = `/adminsitrador/medicos/${medico.id}/agenda`)
+                      (window.location.href = `/administrativo/medicos/${medico.id}/agenda`)
                     }
                   >
                     {medico.agenda ? "Modificar Agenda" : "Crear Agenda"}
                   </Button>
                   <Button
                     onClick={() =>
-                      (window.location.href = `/adminsitrador/medicos/${medico.id}/TurnosMedico`)
+                      (window.location.href = `../administrativo/medicos/${medico.id}/TurnosMedico`)
                     }
                     variant="outline"
                     size="sm"

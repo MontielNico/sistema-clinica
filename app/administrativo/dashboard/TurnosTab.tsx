@@ -72,7 +72,7 @@ export const TurnosTab = () => {
             <TableCell>  <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => (window.location.href = `/admin/turnos/${turno.id}`)}
+                          onClick={() => (window.location.href = `../administrativo/turnos/${turno.id}`)}
                         >
                           Ver Detalle
                         </Button></TableCell>

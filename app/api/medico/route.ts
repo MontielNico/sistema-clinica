@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-//Obtengo los perfiles que son tipo "Paciente"
+//Obtengo los medicos
 export async function GET(request: NextRequest){
     console.log("EndPoint llamado");
     const {data, error} = await supabase.from("medico").select("*");

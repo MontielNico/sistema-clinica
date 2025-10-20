@@ -35,7 +35,9 @@ export const turnosAgendados = [
 export const turnosDisponibles = [
   {
     id: 1,
+    legajo_medico: "4",
     medico: "Dr. Carlos López",
+    id_especialidad: 1,
     especialidad: "Cardiología",
     fecha: "2024-01-16",
     hora: "11:00",
@@ -43,7 +45,9 @@ export const turnosDisponibles = [
   },
   {
     id: 2,
+    legajo_medico: "4",
     medico: "Dr. Carlos López",
+    id_especialidad: 1,
     especialidad: "Cardiología",
     fecha: "2024-01-16",
     hora: "15:30",
@@ -51,10 +55,32 @@ export const turnosDisponibles = [
   },
   {
     id: 3,
+    legajo_medico: "3",
     medico: "Dra. Ana Martínez",
+    id_especialidad: 2,
     especialidad: "Pediatría",
     fecha: "2024-01-17",
     hora: "09:00",
+    estado: "disponible",
+  },
+  {
+    id: 4,
+    legajo_medico: "1003",
+    medico: "Dr. Ricardo Gómez",
+    id_especialidad: 3,
+    especialidad: "Dermatología",
+    fecha: "2024-01-18",
+    hora: "10:30",
+    estado: "disponible",
+  },
+  {
+    id: 5,
+    legajo_medico: "1004",
+    medico: "Dra. Laura Fernández",
+    id_especialidad: 4,
+    especialidad: "Neurología",
+    fecha: "2024-01-19",
+    hora: "13:00",
     estado: "disponible",
   },
 ];
