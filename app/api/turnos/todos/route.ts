@@ -19,6 +19,7 @@ export async function GET() {
       .select(
         `
         cod_turno,
+        estado_turno,
         dni_paciente,
         fecha_hora_turno,
         legajo_medico,
@@ -67,16 +68,15 @@ export async function GET() {
         if (Array.isArray(turno.medico)) {
           nombreMedico = turno.medico[0]?.nombre || "Sin nombre";
           apellidoMedico = turno.medico[0]?.apellido || "Sin apellido";
-          console.log("Medico es ARRAY");
         } else {
           nombreMedico = turno.medico.nombre || "Sin nombre";
           apellidoMedico = turno.medico.apellido || "Sin apellido";
-          console.log("Medico es OBJETO");
         }
       }
 
       const resultado = {
         cod_turno: turno.cod_turno,
+        estado_turno: turno.estado_turno,
         dni_paciente: turno.dni_paciente,
         fecha_hora_turno: turno.fecha_hora_turno,
         legajo_medico: turno.legajo_medico,
@@ -88,7 +88,6 @@ export async function GET() {
 
       return resultado;
     });
-
     return NextResponse.json(turnosFormateados);
   } catch (error) {
     console.error("Error en API turnos/todos:", error);

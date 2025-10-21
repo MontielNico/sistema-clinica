@@ -22,6 +22,7 @@ interface Turno {
   apellido_paciente: string;
   nombre_medico: string;
   apellido_medico: string;
+  estado_turno: string;
 }
 
 interface Filters {
@@ -148,6 +149,9 @@ export const TurnosTab = () => {
               <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 Acciones
               </TableHead>
+              <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                Estado
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -190,6 +194,24 @@ export const TurnosTab = () => {
                     >
                       Ver Detalle
                     </Button>
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium border-2 ${
+                        turno.estado_turno === "Pendiente de pago"
+                          ? "bg-orange-50 text-orange-700 border-orange-300"
+                          : turno.estado_turno === "Pagado" ||
+                            turno.estado_turno === "Confirmado"
+                          ? "bg-green-50 text-green-700 border-green-300"
+                          : turno.estado_turno === "Cancelado"
+                          ? "bg-red-50 text-red-700 border-red-300"
+                          : turno.estado_turno === "Pendiente"
+                          ? "bg-yellow-50 text-yellow-700 border-yellow-300"
+                          : "bg-gray-50 text-gray-700 border-gray-300"
+                      }`}
+                    >
+                      {turno.estado_turno || "Sin estado"}
+                    </span>
                   </TableCell>
                 </TableRow>
               );

@@ -30,9 +30,7 @@ export default function TurnoDetalle({ medico }: any, param: string) {
           <div className="lg:col-span-2 space-y-6">
             <InfoTurno turno={turno}></InfoTurno>
 
-            {/* Paciente Info */}
             <InfoPaciente turno={turno}></InfoPaciente>
-            {/* Medico Info */}
           </div>
 
           {/* Actions Sidebar */}
