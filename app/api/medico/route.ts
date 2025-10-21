@@ -5,7 +5,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
+//devuelve todos los medicos
 export async function GET(request: NextRequest) {
   console.log("EndPoint llamado");
   const { data, error } = await supabase.from("medico").select("*");
@@ -62,10 +62,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar si ya existe un médico con esa matrícula
+    // NOTE: la columna 'legajo_medico' es bigint (id), por eso no debemos
+    // comparar ese campo con el valor de matrícula (que puede tener prefijos).
+    // En su lugar comparamos contra la columna 'matricula' que almacena el
+    // identificador de matrícula (texto).
     const { data: matriculaExistente, error: errorMatricula } = await supabase
       .from("medico")
-      .select("legajo_medico")
-      .eq("legajo_medico", matricula)
+      .select("matricula")
+      .eq("matricula", matricula)
       .single();
 
     if (errorMatricula && errorMatricula.code !== "PGRST116") {

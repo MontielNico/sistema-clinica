@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { Command } from "@/components/ui/command";
 
 interface ObraSocial {
   id_obra: string;
@@ -45,6 +46,7 @@ export function AddMedicoForm({
     useState<string[]>([]);
   const [dni, setDni] = useState("");
   const [matricula, setMatricula] = useState("");
+  const [tipoMatricula, setTipoMatricula] = useState("");
   const [telefono, setTelefono] = useState("");
   const [pesosArgentinos, setPesosArgentinos] = useState("");
   const [obrasSociales, setObrasSociales] = useState<ObraSocial[]>([]);
@@ -149,6 +151,12 @@ export function AddMedicoForm({
       return;
     }
 
+    if (!tipoMatricula.trim()) {
+      setError("El tipo de matrícula es requerido");
+      setIsLoading(false);
+      return;
+    }
+
     if (!telefono.trim()) {
       setError("El teléfono es requerido");
       setIsLoading(false);
@@ -162,6 +170,32 @@ export function AddMedicoForm({
     }
 
     try {
+      // Build final matrícula with prefix according to tipoMatricula
+      const buildMatriculaWithPrefix = (
+        tipo: string,
+        numero: string
+      ): string => {
+        const mapping: Record<string, string> = {
+          nacional: "MN",
+          provincial: "MP",
+        };
+
+        const prefix = mapping[tipo] || "";
+
+        // Normalize number: trim and remove spaces
+        const raw = (numero || "").trim();
+
+        if (!prefix) return raw;
+
+        // If already starts with prefix (case-insensitive), return as-is (normalized)
+        if (raw.toUpperCase().startsWith(prefix.toUpperCase())) {
+          return raw.toUpperCase();
+        }
+
+        return `${prefix}${raw}`.toUpperCase();
+      };
+
+      const matriculaFinal = buildMatriculaWithPrefix(tipoMatricula, matricula);
       const response = await fetch("/api/medico", {
         method: "POST",
         headers: {
@@ -172,7 +206,8 @@ export function AddMedicoForm({
           apellido,
           especialidades: especialidadesSeleccionadas, // Cambiado a array
           dni,
-          matricula,
+          matricula: matriculaFinal,
+          tipoMatricula,
           telefono,
           pesosArgentinos,
           obrasSociales: obrasSocialesSeleccionadas,
@@ -192,7 +227,8 @@ export function AddMedicoForm({
       setApellido("");
       setEspecialidadesSeleccionadas([]);
       setDni("");
-      setMatricula("");
+  setMatricula("");
+  setTipoMatricula("");
       setTelefono("");
       setPesosArgentinos("");
       setObrasSocialesSeleccionadas(obrasSociales.map((obra) => obra.id_obra));
@@ -331,7 +367,21 @@ export function AddMedicoForm({
 
               {/* Matrícula */}
               <div className="grid gap-2">
-                <Label htmlFor="matricula">Matrícula *</Label>
+                <Label htmlFor="tipoMatricula">Tipo de Matrícula *</Label>
+                <Select
+                  onValueChange={(value) => setTipoMatricula(value)}
+                  value={tipoMatricula}
+                >
+                    <SelectTrigger id="tipoMatricula">
+                      <SelectValue placeholder="Selecciona tipo de matrícula" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nacional">Nacional</SelectItem>
+                      <SelectItem value="provincial">Provincial</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                <Label htmlFor="matricula" className="mt-2">Número de Matrícula *</Label>
                 <Input
                   id="matricula"
                   type="text"
