@@ -210,34 +210,36 @@ export default function MedicoTab() {
                     {medico.estado || "activo"}
                   </Badge>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      (window.location.href = `/administrativo/medicos/${medico.legajo_medico}/agenda`)
-                    }
+                  variant="outline"
+                  size="sm"
+                  onClick={() => (window.location.href = `/administrativo/medicos/${medico.legajo_medico}/datos`)}>
+                    Modificar Datos
+                  </Button>
+                  <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => (window.location.href = `/administrativo/medicos/${medico.legajo_medico}/agenda`)}
                   >
                     {medico.agenda ? "Modificar Agenda" : "Crear Agenda"}
                   </Button>
                   <Button
-                    onClick={() =>
-                      (window.location.href = `../administrativo/medicos/${medico.legajo_medico}/TurnosMedico`)
-                    }
-                    variant="outline"
-                    size="sm"
+                  onClick={() => (window.location.href = `../administrativo/medicos/${medico.legajo_medico}/TurnosMedico`)}
+                  variant="outline"
+                  size="sm"
                   >
                     Ver Turnos
                   </Button>
                   <Button
-                    variant={
-                      medico.estado === "activo" ? "destructive" : "default"
-                    }
-                    size="sm"
-                    onClick={() => {
-                      console.log(
-                        "Toggle estado médico:",
-                        medico.legajo_medico
-                      );
-                    }}
+                  variant={
+                    medico.estado === "activo" ? "destructive" : "default"
+                  }
+                  size="sm"
+                  onClick={() => {
+                    console.log(
+                      "Toggle estado médico:",
+                      medico.legajo_medico
+                    );
+                  }}
                   >
                     {medico.estado === "activo" ? "Inhabilitar" : "Habilitar"}
                   </Button>
