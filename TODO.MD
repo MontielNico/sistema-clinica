@@ -12,5 +12,11 @@
 - [x ] buscar especialidaeds de bd
 - [ x] buscar medicos de la bd 
 - [ x] mapear medicos d ela bd 
-- [ ] Calcular turnos libres
+- [ ] Calcular turnos libres ()
 - [ ] Reasignar turnos
+- [ ] \app\paciente\components\ - Cancelar turno
+- [ ] \app\paciente\components\ -Modifcar turno
+- [ ] Modificar Agenda(? 
+- [ ] Notificaciones
+- [ ] Avisos en cancelar/agendar/modificar/inhabilitar/registrar de que no hay vuelta atras!
+- [ ] Reportes 

@@ -31,8 +31,9 @@ export const StatCards = ({dni_paciente} :any) => {
     };
     loadTurnos();
   }, [dni_paciente]);
-
-  const turno = turnos[0]; // el turno más próximo (ya ordenado por fecha)
+ 
+  const turno = turnos[0]; // el turno más próximo (ya ordenado por fecha) //aca deberia evaluar que sea mayor o igual a la fecha actual
+  const ahora= Date.now();
   return (
          <>
           <div className="grid grid-cols-2 gap-6 mb-8">
@@ -45,7 +46,7 @@ export const StatCards = ({dni_paciente} :any) => {
                     </p>
                     {isLoading ? (
                          <p className="text-lg">Cargando...</p>
-                    ) : turno ? (
+                    ) : turno && (turno >= ahora) ? (
                          <>
                          <p className="text-lg font-bold">Tu proximo turno es el</p>
                          <p className="text-lg font-bold">

@@ -26,6 +26,7 @@ interface TurnoBody {
 }
 
 export const TurnosDisponibles = ({ filtroEspecialidad, filtroMedico,}: TurnosDisponiblesProps) => { 
+     console.log(filtroEspecialidad,filtroMedico);
           const [activeTab, setActiveTab] = useState("mis-turnos");
           const [mostrarResultados, setMostrarResultados] = useState(false);
           const [disponibles, setTurnosDisponibles] = useState([]);

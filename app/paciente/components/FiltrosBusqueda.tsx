@@ -123,7 +123,8 @@ console.log(especialidades);
                               >
                                    <option  value="">Seleccionar especialidad</option>
                                    {especialidades.length!=0 && especialidades.map((esp) => (
-                                        <option key={ esp.id_especialidad}> {esp.descripcion}</option>
+                                        <option key={ esp.id_especialidad}
+                                        value={ esp.id_especialidad}> {esp.descripcion}</option>
                                    ))}
                               </select>
                          </div>
@@ -137,7 +138,9 @@ console.log(especialidades);
                               >
                                    <option value="">Seleccionar médico</option>
                                    {medicos.map((medico) => (
-                                        <option key={medico.apellido}>{medico.nombre} {medico.apellido}</option>
+                                        <option key={medico.legajo_medico}
+                                        value={medico.legajo_medico} 
+                                        >{medico.nombre} {medico.apellido}</option>
                                    ))}
                               </select>
                          </div>
