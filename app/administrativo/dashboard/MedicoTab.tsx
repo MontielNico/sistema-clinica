@@ -198,6 +198,9 @@ export default function MedicoTab() {
                           </span>
                         )}
                       </div>
+                      <div className="mt-2-text-sm text-muted-foreground space-y-1">
+                          <strong>DNI:</strong> {medico.dni_medico || 'Sin DNI'}  <strong>Matrícula:</strong> {medico.matricula || 'Sin Matrícula'}  <strong>Teléfono:</strong> {medico.telefono|| 'Sin teléfono'} 
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -217,6 +220,9 @@ export default function MedicoTab() {
                     }
                   >
                     {medico.agenda ? "Modificar Agenda" : "Crear Agenda"}
+                  </Button>
+                  <Button onClick={() => (window.location.href = `/administrativo/medicos/${medico.legajo_medico}/datos`)}>
+                    Modificar Datos
                   </Button>
                   <Button
                   onClick={() => (window.location.href = `../administrativo/medicos/${medico.legajo_medico}/TurnosMedico`)}
