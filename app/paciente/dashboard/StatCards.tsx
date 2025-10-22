@@ -52,9 +52,11 @@ export const StatCards = ({dni_paciente} :any) => {
                          {turno.fecha} </p>
                          <p className="text-lg font-bold"> {turno.hora}< span> hs </span> </p>
                          
-                    {/* <p className="text-sm text-muted-foreground"> 
-                    con {turno.medico}
-                    </p> */}
+                    <p className="text-sm text-muted-foreground"> 
+                    con {turno.medico
+        ? `${turno.medico.nombre ?? ""} ${turno.medico.apellido ?? ""}`.trim()
+        : "-"}
+                    </p>
                     </>
                     ) : (
                          <p className="text-lg font-bold">No hay turnos próximos</p> 
