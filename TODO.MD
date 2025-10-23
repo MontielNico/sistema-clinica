@@ -16,3 +16,4 @@
 - [ ] Reasignar turnos
 - [ ] Cambiar los reportes de turnos por fecha y unificarlos con el listado de turnos agendados.
 - [ ] En el tap de reporte de turnos modificar por los reportes que faltan: Reporte de demanda por medico y por especialidad.
+- [ ] hay q hacer q cuando se selecciona una especialidad al listar turnos disponibles, solo te muestre los medicos que corresponde (estaria bueno)
