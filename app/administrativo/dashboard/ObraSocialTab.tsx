@@ -16,22 +16,27 @@ import {
 import { FileText } from "lucide-react";
 
 interface ObraSocial {
-  id_obra: string;
-  descripcion: string;
-  telefono_contacto?: string;
-  sitioweb?: string;
+  id_obra: string | number;
+  descripcion: string | null;
+  telefono_contacto?: string | number | null;
+  sitio_web?: string | null; // si en tu API es "sitio_web"
   fecha_cambio_estado: string;
   estado: string;
   created_at: string;
 }
 
+// Helper para evitar errores de .trim() cuando llega number/null
+const safeTrim = (v: any) => {
+  if (typeof v === "string") return v.trim();
+  if (v == null) return "";
+  return String(v).trim();
+};
+
 const getObrasSociales = async () => {
   try {
     const response = await fetch("/api/obraSocial", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
 
     if (!response.ok) {
@@ -55,6 +60,11 @@ export const ObraSocialTab = () => {
   const [nuevaFecha, setNuevaFecha] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Estados de edición
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editNombre, setEditNombre] = useState("");
+  const [editTelefono, setEditTelefono] = useState("");
+
   const loadObras = async () => {
     try {
       setIsLoading(true);
@@ -68,15 +78,12 @@ export const ObraSocialTab = () => {
     }
   };
 
-  const handleDeshabilitar = async (id_obra: string, descripcion: string) => {
+  const handleDeshabilitar = async (id_obra: string | number, descripcion: string) => {
     try {
       setIsProcessing(true);
-      console.log("Deshabilitando obra social:", id_obra, descripcion);
       const response = await fetch(`/api/obraSocial`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: id_obra,
           estado: "Deshabilitado",
@@ -125,11 +132,9 @@ export const ObraSocialTab = () => {
 
       const response = await fetch(`/api/obraSocial`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: selectedObra.id_obra, // ✅ Usar id_obra
+          id: selectedObra.id_obra,
           fecha_vigencia: nuevaFecha,
         }),
       });
@@ -155,6 +160,71 @@ export const ObraSocialTab = () => {
     setSelectedObra(null);
     setNuevaFecha("");
     setError(null);
+  };
+
+  // Abrir diálogo de edición
+  const openEdit = (obra: ObraSocial) => {
+    setSelectedObra(obra);
+    setEditNombre(safeTrim(obra.descripcion));
+    setEditTelefono(safeTrim(obra.telefono_contacto));
+    setShowEditDialog(true);
+  };
+
+  // Guardar cambios (solo nombre, solo teléfono o ambos)
+  const handleSaveEdit = async () => {
+    if (!selectedObra) return;
+
+    const nombreOriginal = safeTrim(selectedObra.descripcion);
+    const telefonoOriginal = safeTrim(selectedObra.telefono_contacto);
+
+    const nombreNuevo = safeTrim(editNombre);
+    const telefonoNuevo = safeTrim(editTelefono);
+
+    const payload: Record<string, any> = { id: selectedObra.id_obra };
+
+    if (nombreNuevo !== nombreOriginal) {
+      if (!nombreNuevo) {
+        setError("El nombre (descripción) no puede quedar vacío.");
+        return;
+      }
+      payload.descripcion = nombreNuevo;
+    }
+
+    if (telefonoNuevo !== telefonoOriginal) {
+      payload.telefono_contacto = telefonoNuevo === "" ? null : telefonoNuevo;
+    }
+
+    if (!payload.descripcion && !payload.hasOwnProperty("telefono_contacto")) {
+      setError("No hay cambios para guardar.");
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      setError(null);
+
+      const res = await fetch("/api/obraSocial", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.error || "No se pudo actualizar la obra social");
+      }
+
+      setShowEditDialog(false);
+      setSelectedObra(null);
+      setEditNombre("");
+      setEditTelefono("");
+
+      await loadObras();
+    } catch (e: any) {
+      setError(e?.message ?? "Error al actualizar");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   useEffect(() => {
@@ -188,12 +258,7 @@ export const ObraSocialTab = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           <p className="text-sm">{error}</p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadObras}
-            className="mt-2"
-          >
+          <Button variant="outline" size="sm" onClick={loadObras} className="mt-2">
             Reintentar
           </Button>
         </div>
@@ -201,7 +266,7 @@ export const ObraSocialTab = () => {
 
       <div className="grid gap-4">
         {obras.map((obra) => (
-          <Card key={obra.id_obra}>
+          <Card key={String(obra.id_obra)}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -209,22 +274,20 @@ export const ObraSocialTab = () => {
                     <FileText className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">{obra.descripcion}</p>
+                    <p className="font-medium">{safeTrim(obra.descripcion)}</p>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">
                         Vigencia:{" "}
-                        {new Date(
-                          obra.fecha_cambio_estado
-                        ).toLocaleDateString()}
+                        {new Date(obra.fecha_cambio_estado).toLocaleDateString()}
                       </p>
-                      {obra.telefono_contacto && (
+                      {safeTrim(obra.telefono_contacto) && (
                         <p className="text-sm text-muted-foreground">
-                          Teléfono: {obra.telefono_contacto}
+                          Teléfono: {safeTrim(obra.telefono_contacto)}
                         </p>
                       )}
-                      {obra.sitioweb && (
+                      {safeTrim(obra.sitio_web) && (
                         <p className="text-sm text-muted-foreground">
-                          Sitio: {obra.sitioweb}
+                          Sitio: {safeTrim(obra.sitio_web)}
                         </p>
                       )}
                     </div>
@@ -243,12 +306,21 @@ export const ObraSocialTab = () => {
                     {obra.estado}
                   </Badge>
 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEdit(obra)}
+                    disabled={isProcessing}
+                  >
+                    Modificar
+                  </Button>
+
                   {obra.estado === "Habilitado" ? (
                     <Button
                       variant="destructive"
                       size="sm"
                       onClick={() =>
-                        handleDeshabilitar(obra.id_obra, obra.descripcion)
+                        handleDeshabilitar(obra.id_obra, safeTrim(obra.descripcion))
                       }
                       disabled={isProcessing}
                     >
@@ -283,10 +355,10 @@ export const ObraSocialTab = () => {
           <DialogHeader>
             <DialogTitle>Programar Habilitación</DialogTitle>
             <DialogDescription>
-              Selecciona la fecha desde la cual la obra social
+              Seleccioná la fecha desde la cual la obra social{" "}
               <strong>
-                {" "}
-                {selectedObra?.descripcion}, {selectedObra?.id_obra}
+                {safeTrim(selectedObra?.descripcion)}{" "}
+                {selectedObra ? `(${String(selectedObra.id_obra)})` : ""}
               </strong>{" "}
               estará habilitada.
             </DialogDescription>
@@ -303,8 +375,7 @@ export const ObraSocialTab = () => {
                 min={new Date().toISOString().split("T")[0]}
               />
               <p className="text-xs text-gray-500">
-                La obra social cambiará automáticamente a "Habilitado" en esta
-                fecha
+                La obra social cambiará automáticamente a "Habilitado" en esta fecha.
               </p>
             </div>
           </div>
@@ -324,6 +395,63 @@ export const ObraSocialTab = () => {
               disabled={!nuevaFecha || isProcessing}
             >
               {isProcessing ? "Programando..." : "Programar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de edición (nombre / teléfono) */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Modificar Obra Social</DialogTitle>
+            <DialogDescription>
+              Actualizá el nombre y el teléfono de{" "}
+              <strong>{safeTrim(selectedObra?.descripcion)}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-nombre">Nombre</Label>
+              <Input
+                id="edit-nombre"
+                value={editNombre}
+                onChange={(e) => setEditNombre(e.target.value)}
+                placeholder="Nombre de la obra social"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="edit-telefono">Teléfono</Label>
+              <Input
+                id="edit-telefono"
+                value={editTelefono}
+                onChange={(e) => setEditTelefono(e.target.value)}
+                placeholder="Ej: 011 1234-5678"
+              />
+              <p className="text-xs text-muted-foreground">
+                Dejá vacío para quitar el teléfono.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEditDialog(false);
+                setSelectedObra(null);
+                setEditNombre("");
+                setEditTelefono("");
+                setError(null);
+              }}
+              disabled={isProcessing}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={isProcessing}>
+              {isProcessing ? "Guardando..." : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -446,16 +446,20 @@ export function TableUsersAdmin() {
                 }
               />
             </div>
+
             <div>
               <Label>Email</Label>
               <Input
                 type="email"
                 value={editForm.email}
+                 disabled // ← agrega esto
+                  className="bg-gray-100 cursor-not-allowed"
                 onChange={(e) =>
                   setEditForm({ ...editForm, email: e.target.value })
                 }
               />
             </div>
+
           </div>
 
           <DialogFooter className="mt-4">

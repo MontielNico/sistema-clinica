@@ -1,40 +1,36 @@
+// app/api/obraSocial/route.ts
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { notificarCambioEstadoTurno } from "@/hooks/obra-social/notifica-pendiente-pago";
+
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
+  { auth: { autoRefreshToken: false, persistSession: false } }
 );
+
 type Turno = {
   cod_turno: number;
   fecha_hora_turno: string;
-  especialidad?: {
-    descripcion: string;
-  };
+  id_especialidad: number;
 };
 
+/* =========================
+   GET — Lista obras sociales
+   ========================= */
 export async function GET() {
   try {
-    console.log("Iniciando GET de obras sociales");
-
     const hoy = new Date().toISOString().split("T")[0];
 
-    const { data: updatedObras, error: updateError } = await supabaseAdmin
+    // Promueve a "Habilitado" las obras con fecha ya alcanzada
+    const { error: updateError } = await supabaseAdmin
       .from("obra_social")
       .update({ estado: "Habilitado" })
       .eq("estado", "Pendiente")
       .lte("fecha_cambio_estado", hoy)
       .select();
 
-    if (updateError) {
-      console.error("Error actualizando estados:", updateError);
-    }
+    if (updateError) console.error("Error actualizando estados:", updateError);
 
     const { data: obrasSociales, error: selectError } = await supabaseAdmin
       .from("obra_social")
@@ -46,36 +42,40 @@ export async function GET() {
       throw new Error(`Error de base de datos: ${selectError.message}`);
     }
 
-    console.log("Obras sociales obtenidas:", obrasSociales?.length || 0);
-
     return NextResponse.json({
       success: true,
-      data: obrasSociales || [],
+      data: obrasSociales ?? [],
       metadata: {
-        total: obrasSociales?.length || 0,
+        total: obrasSociales?.length ?? 0,
         lastUpdated: new Date().toISOString(),
-        updatedCount: updatedObras?.length || 0,
       },
     });
   } catch (error) {
-    console.error("Error completo en GET:", error);
+    console.error("GET /obraSocial:", error);
     return NextResponse.json(
       {
         error: "Error interno del servidor",
         details: error instanceof Error ? error.message : "Error desconocido",
-        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
   }
 }
 
+/* =====================================
+   POST — Crear nueva obra social (alta)
+   ===================================== */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log("Body recibido en POST:", body);
-
-    const { data } = body;
+    const { data } = body as {
+      data?: {
+        descripcion?: string;
+        telefono_contacto?: string | null;
+        sitioweb?: string | null;
+        fecha_vigencia?: string; // yyyy-mm-dd
+      };
+    };
 
     if (!data?.descripcion) {
       return NextResponse.json(
@@ -83,7 +83,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     if (!data?.fecha_vigencia) {
       return NextResponse.json(
         { error: "La fecha de vigencia es requerida" },
@@ -93,7 +92,6 @@ export async function POST(request: NextRequest) {
 
     const fechaVigencia = new Date(data.fecha_vigencia);
     const fechaActual = new Date();
-
     fechaVigencia.setHours(0, 0, 0, 0);
     fechaActual.setHours(0, 0, 0, 0);
 
@@ -101,31 +99,26 @@ export async function POST(request: NextRequest) {
 
     const insertData = {
       descripcion: data.descripcion,
-      telefono_contacto: data.telefono_contacto || null,
-      sitio_web: data.sitioweb || null,
+      telefono_contacto: data.telefono_contacto ?? null,
+      sitio_web: data.sitioweb ?? null,
       fecha_cambio_estado: data.fecha_vigencia,
-      estado: estado,
+      estado,
     };
 
-    console.log("Datos a insertar:", insertData);
-
-    const { data: insertedData, error } = await supabaseAdmin
+    const { data: inserted, error } = await supabaseAdmin
       .from("obra_social")
       .insert(insertData)
       .select()
       .single();
 
     if (error) {
-      console.error("Error insertando:", error);
+      console.error("POST insert error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: insertedData,
-    });
+    return NextResponse.json({ success: true, data: inserted });
   } catch (error) {
-    console.error("Error en POST:", error);
+    console.error("POST /obraSocial:", error);
     return NextResponse.json(
       {
         error: "Error interno del servidor",
@@ -136,98 +129,140 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/* ==========================================================
+   PUT — Actualiza:
+   - Programación de habilitación (fecha_vigencia)
+   - Cambios de estado (incluye Deshabilitado + efectos)
+   - Edición básica: descripcion/nombre y/o telefono_contacto (independientes)
+   ========================================================== */
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, estado, fecha_vigencia, descripcion } = body;
+
+    const {
+      id,
+      estado,
+      fecha_vigencia,
+      descripcion,
+      telefono_contacto,
+      nombre, // alias opcional para "descripcion"
+    } = body as {
+      id?: string | number;
+      estado?: string;
+      fecha_vigencia?: string;
+      descripcion?: string;
+      telefono_contacto?: string | null;
+      nombre?: string;
+    };
+
     if (!id) {
       return NextResponse.json({ error: "ID es requerido" }, { status: 400 });
     }
 
-    let updateData: any = {};
+    // detectar qué campos vinieron explícitamente
+    const hasDescripcion = Object.prototype.hasOwnProperty.call(body, "descripcion");
+    const hasNombre      = Object.prototype.hasOwnProperty.call(body, "nombre");
+    const hasTelefono    = Object.prototype.hasOwnProperty.call(body, "telefono_contacto");
 
+    const updateData: Record<string, any> = {};
+
+    // 1) Programar habilitación (se combina con lo demás)
     if (fecha_vigencia) {
-      updateData = {
-        fecha_cambio_estado: fecha_vigencia,
-        estado: "Pendiente",
-      };
-    } else if (estado) {
+      updateData.fecha_cambio_estado = fecha_vigencia;
+      updateData.estado = "Pendiente";
+    }
+
+    // 2) Cambiar estado (se combina con lo demás)
+    if (estado) {
+      updateData.estado = estado;
+
       if (estado === "Deshabilitado") {
-        // Obtener turnos afectados ANTES de actualizar
-
-        const { data: turnosAfectados, error } = await supabaseAdmin
+        const { data: turnosAfectados } = await supabaseAdmin
           .from("turno")
-          .select(
-            `
-      cod_turno,
-      fecha_hora_turno,
-      id_especialidad
-    `
-          )
-          .eq("id_obra", id);
+          .select("cod_turno, fecha_hora_turno, id_especialidad")
+          .eq("id_obra", Number(id));
 
-        console.log(
-          "Turnos afectados:",
-          JSON.stringify(turnosAfectados, null, 2)
-        );
         await supabaseAdmin
           .from("turno")
           .update({ estado_turno: "Pendiente de pago", turno_pagado: false })
-          .eq("id_obra", id);
+          .eq("id_obra", Number(id));
 
-        // Obtener nombre de obra social
+        if (turnosAfectados?.length) {
+          const descNotif =
+            (typeof descripcion === "string" && descripcion.trim()) ||
+            (typeof nombre === "string" && nombre.trim()) ||
+            "Obra social";
 
-        if (turnosAfectados && turnosAfectados.length > 0) {
-          for (const turno of turnosAfectados) {
+          for (const turno of turnosAfectados as Turno[]) {
             try {
-              const especialidad = await supabaseAdmin
+              const esp = await supabaseAdmin
                 .from("especialidad")
                 .select("descripcion")
                 .eq("id_especialidad", turno.id_especialidad)
                 .single();
 
               await notificarCambioEstadoTurno({
-                idTurno: turno.cod_turno,
-                descripcion: descripcion || "Obra social",
+                idTurno: String(turno.cod_turno),
+                descripcion: descNotif,
                 nuevoEstado: "Pendiente de pago",
-                fechaHoraTurno: turno.fecha_hora_turno, // Puedes obtener la fecha y hora real si es necesario
-
-                especialidad:
-                  especialidad.data?.descripcion ||
-                  "Especialidad no disponible",
+                fechaHoraTurno: turno.fecha_hora_turno,
+                especialidad: esp.data?.descripcion || "Especialidad no disponible",
               });
-            } catch (notificationError) {
-              console.error(
-                `Error notificando turno ${turno.cod_turno}:`,
-                notificationError
-              );
+            } catch (e) {
+              console.error("Notificación fallo:", e);
             }
           }
         }
 
-        // Eliminar convenios
-        await supabaseAdmin.from("convenio").delete().eq("id_obra", id);
+        await supabaseAdmin.from("convenio").delete().eq("id_obra", Number(id));
       }
+    }
 
-      updateData = { estado };
-    } else {
+    // 3) Edición básica — nombre (descripcion/nombre) y/o teléfono (independientes)
+    if (hasDescripcion || hasNombre) {
+      const nuevoNombre =
+        (typeof descripcion === "string" && descripcion.trim()) ||
+        (typeof nombre === "string" && nombre.trim()) ||
+        undefined;
+
+      if (nuevoNombre !== undefined) updateData.descripcion = nuevoNombre;
+    }
+
+    if (hasTelefono) {
+      if (typeof telefono_contacto === "string") {
+        const t = telefono_contacto.trim();
+        updateData.telefono_contacto = t === "" ? null : t; // vacío => borra
+      } else if (telefono_contacto === null) {
+        updateData.telefono_contacto = null;
+      }
+    }
+
+    // DEBUG: ver qué llega y qué vamos a escribir
+    console.log("[PUT /obraSocial] body:", body);
+    console.log("[PUT /obraSocial] updateData:", updateData);
+
+    // 4) Validar que haya algo para actualizar
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        { error: "Estado o fecha de vigencia son requeridos" },
+        { error: "Enviá al menos un campo para actualizar (nombre o teléfono)." },
         { status: 400 }
       );
     }
 
+    // 5) Ejecutar actualización
     const { error } = await supabaseAdmin
       .from("obra_social")
       .update(updateData)
-      .eq("id_obra", id);
+      .eq("id_obra", Number(id));
 
     if (error) {
+      console.error("Error al actualizar obra_social:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("PUT /obraSocial:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
