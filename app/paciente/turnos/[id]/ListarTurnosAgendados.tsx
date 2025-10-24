@@ -95,20 +95,14 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
 
   const [turnoAModificar, setTurnoAModificar] = useState<any>(null);
 
-
- 
-
-
-
-
-    if (turnoAModificar) {
-      return (
-        <ModificarTurno
-          turnoAModificar={turnoAModificar}
-          setTurnoAModificar={setTurnoAModificar}
-        />
-      );
-    }
+  if (turnoAModificar) {
+    return (
+      <ModificarTurno
+        turnoAModificar={turnoAModificar}
+        setTurnoAModificar={setTurnoAModificar}
+      />
+    );
+  }
   return (
     <Table className="w-full text-m">
       <TableHeader>
@@ -148,7 +142,7 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
                 <Button
                   variant="outline"
                   size="sm"
-                    onClick={() => setTurnoAModificar(turno)}  //lo comento porque rompe todo
+                  onClick={() => setTurnoAModificar(turno)} //lo comento porque rompe todo
                 >
                   <Edit className="h-4 w-4 mr-1" />
                   Modificar

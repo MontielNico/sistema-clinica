@@ -55,7 +55,6 @@ export async function POST(request: NextRequest) {
       });
     }, 0);
 
-    // Responde rápido al cliente
     return NextResponse.json({
       success: true,
       message: "Notificaciones enviándose en background.",
