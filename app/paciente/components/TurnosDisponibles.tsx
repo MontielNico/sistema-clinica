@@ -1,121 +1,120 @@
-import React from 'react'
-import { useState } from "react";
-import {turnosDisponibles,medico} from "../../data/Info";
-import {  Clock, CheckCircle } from "lucide-react";
-import {Card,CardContent} from "@/components/ui/card";
+"use client";
+
+import React, { useState } from "react";
+import { Clock, CheckCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Agendar from "./Agendar";
 import NoMatches from "./NoMatches";
+import { useTurnosLibres } from "@/hooks/turnos/UseTurnosLibres";
 
 interface TurnosDisponiblesProps {
-  filtroEspecialidad: string;
-  filtroMedico: string;
-  
+  filtroEspecialidad: number;
+  filtroMedico?: number;
 }
 
-interface TurnoBody {
-     legajo_medico: string;
-     dni_paciente: number;
-     fecha_hora_turno: Date;
-     id_especialidad: number;
-     id_obra: string | null;
-     turno_pagado?: boolean;
-     estado_turno: string;
-     turno_modificado?: boolean;
-     presencia_turno?: boolean; // opcional
-}
+export const TurnosDisponibles = ({
+  filtroEspecialidad,
+  filtroMedico,
+}: TurnosDisponiblesProps) => {
+  // 🧠 Estado del componente
+  const [turnoAConfirmar, setTurnoAConfirmar] = useState<any>(null);
+  const [turnosAgendados, setTurnosAgendados] = useState<any[]>([]);
+  const [mostrarCantidad, setMostrarCantidad] = useState(15);
 
-export const TurnosDisponibles = ({ filtroEspecialidad, filtroMedico,}: TurnosDisponiblesProps) => { 
-     console.log(filtroEspecialidad,filtroMedico);
-          const [activeTab, setActiveTab] = useState("mis-turnos");
-          const [mostrarResultados, setMostrarResultados] = useState(false);
-          const [disponibles, setTurnosDisponibles] = useState([]);
-          const [turnoAModificar, setTurnoAModificar] = useState<any>(null);
-          const [turnoAConfirmar, setTurnoAConfirmar] = useState<any>(null);
+  // 📡 Datos del hook (usa directamente libres, sin duplicar estado)
+  const { libres, loading, error } = useTurnosLibres(
+    filtroEspecialidad,
+    filtroMedico
+  );
 
-          const seleccionarNuevoTurno = (nuevoTurno: any) => {
-               setTurnosAgendados((prev) =>
-                    prev.map((t) =>
-                         t.id === turnoAModificar.id
-                              ? { ...t, fecha: nuevoTurno.fecha, hora: nuevoTurno.hora }
-                              : t
-                    )
-               );
-               setTurnoAModificar(null);
-          };
-     
-          // Función para agendar un turno (ahora solo abre el modal de pago)
-          const agendarTurno = (turno: any) => {
-               setTurnoAConfirmar(turno);
-          };
-     
-          
+  // 🔧 Mostrar “Ver más”
+  const mostrarMas = () => setMostrarCantidad((prev) => prev + 15);
 
-          const medicosFiltrados = filtroEspecialidad
-                    ? medico.filter((m) => m.especialidad === filtroEspecialidad)
-                    : [];
-          
-               const turnosFiltrados = disponibles.filter((turno) => {
-                    const coincideMedico =
-                         !filtroMedico ||
-                         filtroMedico === "Seleccionar médico" ||
-                         turno.medico === filtroMedico;
-                    const coincideEspecialidad =
-                         !filtroEspecialidad ||
-                         filtroEspecialidad === "Todas las especialidades" ||
-                         turno.especialidad === filtroEspecialidad;
-                    return (
-                         coincideMedico && coincideEspecialidad && turno.estado_turno === "disponible"
-                    );
-               });
-          
-console.log("Turnos Filtrados:", turnosFiltrados);
-                    console.log(turnosFiltrados.length);
+  // 🕒 Transformar cada ISO string en {fecha, hora}
+  const formatearTurnos = libres.map((iso: string) => {
+    const fecha = new Date(iso);
+    const fechaStr = fecha.toLocaleDateString("es-AR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
+    });
+    const horaStr = fecha.toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return { id: iso, fecha: fechaStr, hora: horaStr };
+  });
 
-return (
-               <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Turnos Disponibles</h3>
-                    
-                    {turnosFiltrados.length === 0  && (
+  // 🧭 Estado visual
+  if (loading)
+    return <p className="text-muted-foreground">Cargando turnos disponibles...</p>;
+  if (error)
+    return (
+      <p className="text-destructive">
+        Error al cargar turnos: {error}
+      </p>
+    );
+  if (!libres || libres.length === 0)
+    return (
       <NoMatches filtroEspecialidad={filtroEspecialidad} />
-    )}
-                    {
-                         turnosFiltrados.map((turno) => (
-                              <Card key={turno.id}>
-                                   <CardContent className="p-4">
-                                        <div className="flex items-center justify-between">
-                                             <div className="flex items-center gap-4">
-                                                  <div className="bg-secondary/10 p-2 rounded-lg">
-                                                       <Clock className="h-4 w-4 text-secondary" />
-                                                  </div>
-                                                  <div>
-                                                       <p className="font-medium">{turno.medico}</p>
-                                                       <p className="text-sm text-muted-foreground">
-                                                            {turno.especialidad}
-                                                       </p>
-                                                       <p className="text-sm font-medium">
-                                                            {turno.fecha} - {turno.hora}
-                                                       </p>
-                                                  </div>
-                                             </div>
-                                             <div className="flex gap-2">
-                                                  <Button size="sm" onClick={() => agendarTurno(turno)}>
-                                                       <CheckCircle className="h-4 w-4 mr-1" />
-                                                       Agendar
-                                                  </Button>
-                                             </div>
-                                        </div>
-                                   </CardContent>
-                              </Card>
-                         ))}
-                         {turnoAConfirmar && 
-                         <Agendar
-                         turnoAConfirmar={turnoAConfirmar}
-                         setTurnoAConfirmar={setTurnoAConfirmar}
-                         setTurnosAgendados={setTurnosAgendados}
-                         setTurnosDisponibles={setTurnosDisponibles}
-                         ></Agendar> }
-               </div>
-     )
-}
+      // o un fallback simple:
+      // <p className="text-muted-foreground">
+      //   No hay turnos disponibles con esos filtros.
+      // </p>
+    );
 
+  // 🎯 Render principal
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Turnos Disponibles</h3>
+
+      {formatearTurnos.slice(0, mostrarCantidad).map((turno) => (
+        <Card key={turno.id}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-secondary/10 p-2 rounded-lg">
+                  <Clock className="h-4 w-4 text-secondary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{turno.fecha}</p>
+                  <p className="text-muted-foreground">{turno.hora}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => setTurnoAConfirmar(turno)}
+                  variant="default"
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Agendar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      {/* 🔽 Botón “Ver más” */}
+      {formatearTurnos.length > mostrarCantidad && (
+        <div className="flex justify-center">
+          <Button variant="outline" onClick={mostrarMas}>
+            Ver más turnos
+          </Button>
+        </div>
+      )}
+
+      {/* 🧾 Modal de agendado */}
+      {turnoAConfirmar && (
+        <Agendar
+          turnoAConfirmar={turnoAConfirmar}
+          setTurnoAConfirmar={setTurnoAConfirmar}
+          setTurnosAgendados={setTurnosAgendados}
+          setTurnosDisponibles={() => {}}
+        />
+      )}
+    </div>
+  );
+};

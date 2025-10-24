@@ -105,3 +105,25 @@ export async function POST(request : NextRequest){
         );
     }
 }
+
+
+//devuelve la agenda de un medico
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const legajo = searchParams.get("legajo");
+    if (!legajo) return NextResponse.json({ error: "Falta legajo" }, { status: 400 });
+
+    const nowIso = new Date().toISOString();
+    const { data, error } = await supabase
+      .from("agenda")
+      .select("*")
+      .eq("legajo_medico", legajo)
+      .order("legajo_medico", { ascending: true });
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data || []);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
+  }
+}

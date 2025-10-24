@@ -65,7 +65,7 @@ export default function PacienteDashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <HeaderPaciente></HeaderPaciente>
+      <HeaderPaciente dni={ dniPaciente}></HeaderPaciente>
       <div className="container mx-auto px-4 py-6">
        { dniPaciente!=null && 
        <StatCards dni_paciente={dniPaciente}></StatCards>}
