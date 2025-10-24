@@ -14,6 +14,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+
 export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
   const [turnosAgendados, setTurnosAgendados] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,7 +25,6 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
   async function cancelarTurno(cod_turno: number) {
     const montoReintegro = await calcularReintegro(cod_turno); //llamo a la funcion para calcular el reintegro
     if (montoReintegro && montoReintegro > 0) {
-      console.log("MONTO A REINTEGRAR", montoReintegro);
       await fetch("/api/reintegro/notificar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -32,7 +32,7 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
           cod_turno,
           montoReintegro: Number(montoReintegro),
         }),
-      }); //esssooo
+      });
     }
 
     setLoadingCancelar(true);
