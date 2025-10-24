@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { cod_turno, montoReintegro } = body;
-    console.log("MONTO A REINTEGRAR", montoReintegro);
     const { data: turnoData, error: turnoError } = await supabase
       .from("turno")
       .select("profiles(dni_paciente, telefono, email)")
@@ -34,33 +33,32 @@ export async function POST(request: NextRequest) {
     const telefono = paciente.telefono;
     const correoPaciente = paciente.email;
 
-    const { data: admins, error: adminError } = await supabase
-      .from("profiles_administrativos")
-      .select("email");
+    // Buscar y notificar en background
+    setTimeout(async () => {
+      const { data: admins, error: adminError } = await supabase
+        .from("profiles_administrativos")
+        .select("email");
 
-    if (adminError || !admins) {
-      return NextResponse.json(
-        { error: "No se encontraron emails de administrativos" },
-        { status: 404 }
-      );
-    }
+      if (adminError || !admins) {
+        console.error("No se encontraron emails de administrativos");
+        return;
+      }
 
-    let resultados: any[] = [];
-    for (const admin of admins) {
-      const administrativoEmail = admin.email;
-      const result = await sendReintegroNotification({
-        administrativoEmail,
-        dniPaciente,
-        telefono,
-        correoPaciente,
-        monto: montoReintegro,
+      admins.forEach(async (admin: any) => {
+        await sendReintegroNotification({
+          administrativoEmail: admin.email,
+          dniPaciente,
+          telefono,
+          correoPaciente,
+          monto: montoReintegro,
+        });
       });
-      resultados.push({ administrativoEmail, ...result });
-    }
+    }, 0);
 
+    // Responde rápido al cliente
     return NextResponse.json({
       success: true,
-      resultados,
+      message: "Notificaciones enviándose en background.",
     });
   } catch (error) {
     return NextResponse.json(

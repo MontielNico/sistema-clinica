@@ -22,9 +22,7 @@ export async function calcularReintegro(cod_turno: number): Promise<number> {
       const diffHoras = diffMs / (1000 * 60 * 60);
 
       if (diffHoras >= 48) {
-        const medicoRes = await fetch(
-          `/api/medico/${legajoMedico}/medico-legajo`
-        );
+        const medicoRes = await fetch(`/api/medico/${legajoMedico}`);
         const medicoData = await medicoRes.json();
         const tarifaMedico = medicoData?.tarifa;
 
