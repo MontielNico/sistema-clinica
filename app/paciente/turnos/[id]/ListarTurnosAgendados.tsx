@@ -5,6 +5,7 @@ import { Edit, X } from "lucide-react";
 import DialogCancelar from "../../components/DialogCancelar";
 import { Button } from "@/components/ui/button";
 import { ModificarTurno } from "./ModificarTurno";
+import { calcularReintegro } from "@/hooks/pago/calcular-reintegro";
 import {
   Table,
   TableHeader,
@@ -13,7 +14,6 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-
 export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
   const [turnosAgendados, setTurnosAgendados] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,7 +21,20 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
   const [turnoACancelar, setTurnoACancelar] = useState<number | null>(null);
   const [loadingCancelar, setLoadingCancelar] = useState(false);
 
-  async function cancelarTurno(cod_turno: string) {
+  async function cancelarTurno(cod_turno: number) {
+    const montoReintegro = await calcularReintegro(cod_turno); //llamo a la funcion para calcular el reintegro
+    if (montoReintegro && montoReintegro > 0) {
+      console.log("MONTO A REINTEGRAR", montoReintegro);
+      await fetch("/api/reintegro/notificar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cod_turno,
+          montoReintegro: Number(montoReintegro),
+        }),
+      }); //esssooo
+    }
+
     setLoadingCancelar(true);
     console.log("eliminar el turno con el codigo", cod_turno);
     try {
