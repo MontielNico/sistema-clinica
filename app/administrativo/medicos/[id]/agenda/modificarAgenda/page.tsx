@@ -7,6 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { HeaderAgenda } from "../HeaderAgenda";
 import { Calendar, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AgendaModificada } from "@/components/ui/agendaModificada";
+
 
 export default function EditarAgendaForm({
   params,
@@ -19,6 +21,62 @@ export default function EditarAgendaForm({
   const [fechaFin, setFechaFin] = useState("");
   const [medico, setMedico] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [exito, setExito] = useState(false);
+  const [turnosReasignados, setTurnosReasignados] = useState<number>(0);
+  const [guardando, setGuardando] = useState(false);
+
+  
+  async function handleGuardar(e: React.FormEvent){
+    e.preventDefault();
+    setGuardando(true);
+
+    const diasSeleccionados = diasAtencion
+    .map((d, index)=>{
+      if(!d.activo) return null;
+      return{
+        dia_semana: index + 1,
+        hora_inicio: d.hora_inicio + ":00",
+        hora_fin: d.hora_fin + ":00"
+      };
+    })
+    .filter(Boolean);
+
+    const minutos = duracionTurno;
+    const horas = Math.floor(minutos/60).toString().padStart(2,"0");
+    const mins = (minutos % 60).toString().padStart(2, "0");
+
+    const body = {
+      fechainiciovigencia: fechaInicio,
+      fechafinvigencia: fechaFin,
+      duracionturno: `${horas}:${mins}:00`,
+      dias_semana: diasSeleccionados,
+    };
+
+    console.log("Body a enviar:", JSON.stringify(body, null, 2));
+
+
+    try{
+      const res = await fetch(`/api/agenda?legajo_medico=${legajo_medico}`,{
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if(!res.ok) throw new Error(data.error || "Error al acutalizar agenda");
+
+      console.log(`${data.mensaje}\nTurnos afectados: ${data.turnos_afectados}\nTurnos reasignados: ${data.turnos_reasignados}`);
+
+      setTurnosReasignados(data.turnos_reasignados);
+      setExito(true);
+
+    } catch (error: any){
+      alert("error:" + error.message);
+    } finally{
+      setGuardando(false);
+    }
+  } 
 
   const diasSemana = [
     "Lunes",
@@ -57,7 +115,7 @@ export default function EditarAgendaForm({
 
           const nuevosDias = diasSemana.map((_, index) => {
             const diaEncontrado = data.agenda.dia_semana?.find(
-              (d: any) => d.dia_semana === index
+              (d: any) => d.dia_semana === index + 1
             );
             return {
               activo: !!diaEncontrado,
@@ -84,11 +142,22 @@ export default function EditarAgendaForm({
 
   if (loading) return <p className="text-center mt-8">Cargando Agenda...</p>;
 
+  if (exito)
+    return (
+      <AgendaModificada
+        nombre={medico?.nombre}
+        apellido={medico?.apellido}
+        mensaje={turnosReasignados.toString()}
+        destino="/administrativo/dashboard"
+        delay={3000}
+      />
+    );
+
   return (
     <div>
       <HeaderAgenda nombre={medico?.nombre} apellido={medico?.apellido} />
       <div className="flex flex-col items-center bg-gray-50 min-h-screen py-10">
-        <form className="w-full max-w-3xl space-y-6">
+        <form className="w-full max-w-3xl space-y-6" onSubmit={handleGuardar}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -207,7 +276,17 @@ export default function EditarAgendaForm({
           </Card>
 
           <div className="flex justify-center">
-            <Button>Guardar</Button>
+          <Button
+            type="submit"
+            disabled={guardando}
+            className={`transition-all ${
+            guardando
+              ? "cursor-not-allowed opacity-70"
+              : "hover:scale-[1.03] hover:brightness-110"
+            }`}
+          >
+          {guardando ? "Guardando..." : "Guardar"}
+          </Button>
           </div>
         </form>
       </div>

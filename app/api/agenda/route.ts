@@ -1,3 +1,7 @@
+import { getTurnosAfectados } from "@/hooks/agenda/getTurnosAfectados";
+import { reasignarTurnos } from "@/hooks/agenda/reasignar";
+import { updateAgenda } from "@/hooks/agenda/updateAgenda";
+import { updateDiaSemana } from "@/hooks/agenda/updateDiasSemana";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -156,3 +160,54 @@ export async function GET(request : NextRequest){
         );
     }
 }
+
+export async function PUT(request : NextRequest){
+    try{
+        const url = new URL(request.url);
+        const legajo_medico = url.searchParams.get("legajo_medico");
+
+        if(!legajo_medico){
+            return NextResponse.json(
+                {error: "no se encuentra el parametro legajo_medico"},
+                {status: 400}
+            );
+        }
+
+        const body = await request.json();
+
+        const {data: agenda, error: errorAgenda} = await supabase
+        .from("agenda")
+        .select("*")
+        .eq("legajo_medico", legajo_medico)
+        .single();
+
+        if (errorAgenda || !agenda)
+            return NextResponse.json(
+              { error: "No se encontró la agenda para ese legajo" },
+              { status: 404 }
+            );
+
+        //actualiza agenda
+        const nuevaAgenda = await updateAgenda(agenda.id_agenda, body);
+
+        //actualiza dias semana
+        await updateDiaSemana(agenda.id_agenda, body.dias_semana);
+
+        //busca turnos que quedaron afectados con las modificaciones
+        const turnosAfectados = await getTurnosAfectados(agenda.id_agenda, agenda.legajo_medico)
+            
+        const turnosReasignados = await reasignarTurnos(turnosAfectados, nuevaAgenda);
+
+        return NextResponse.json({
+            mensaje: "Agenda actualizada correctamente",
+            turnos_afectados: turnosAfectados.length,
+            turnos_reasignados: turnosReasignados.length,
+        });
+    } catch (error: any){
+        console.error("Error en put /api/agenda:", error);
+        return NextResponse.json(
+            {error: "Error al modificar la agenda", detalle: error.message},
+            {status: 500}
+        );
+    }
+    }
