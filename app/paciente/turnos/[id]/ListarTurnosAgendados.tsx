@@ -1,6 +1,5 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { turnosDisponibles } from "../../../data/Info";
 import { Edit, X } from "lucide-react";
 import DialogCancelar from "../../components/DialogCancelar";
 import { Button } from "@/components/ui/button";
@@ -46,10 +45,8 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
         body: JSON.stringify({ cod_turno }),
       });
       if (!response.ok) throw new Error("Error al cancelar turno");
-      //vuelvo a setear los turnos para que se reflejen los cambios
-      setTurnosAgendados((prev) =>
-        prev.filter((turno) => turno.cod_turno !== cod_turno)
-      );
+      // Refresh the appointments list
+      await refreshTurnos();
       setDialogOpen(false);
       setTurnoACancelar(null);
     } catch (error) {
@@ -78,21 +75,19 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
     }
   }
 
-  useEffect(() => {
-    const loadTurnos = async () => {
-      setIsLoading(true);
-      if (dni_paciente) {
-        const data = await getTurnosPaciente(dni_paciente);
-        setTurnosAgendados(data);
-      }
-      setIsLoading(false);
-    };
-    loadTurnos();
-  }, [dni_paciente]);
-  useEffect(() => {
-    console.log(turnosAgendados);
-  }, [turnosAgendados]);
+  const refreshTurnos = async () => {
+    setIsLoading(true);
+    if (dni_paciente) {
+      const data = await getTurnosPaciente(dni_paciente);
+      setTurnosAgendados(data);
+    }
+    setIsLoading(false);
+  };
 
+  useEffect(() => {
+    refreshTurnos();
+  }, [dni_paciente]);
+ 
   const [turnoAModificar, setTurnoAModificar] = useState<any>(null);
 
   if (turnoAModificar) {
@@ -100,6 +95,7 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
       <ModificarTurno
         turnoAModificar={turnoAModificar}
         setTurnoAModificar={setTurnoAModificar}
+        onSuccess={refreshTurnos}
       />
     );
   }
@@ -139,6 +135,7 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
 
             <TableCell>
               <div className="flex gap-2">
+                { turno.turno_modificado!=true && ( 
                 <Button
                   variant="outline"
                   size="sm"
@@ -146,7 +143,7 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
                 >
                   <Edit className="h-4 w-4 mr-1" />
                   Modificar
-                </Button>
+                </Button>)}
 
                 <Button
                   variant="destructive"

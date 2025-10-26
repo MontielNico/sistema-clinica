@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { useTurnosLibres } from "@/hooks/turnos/UseTurnosLibres";
-
+import Modificar from "../../components/Modifiicar";
 interface TurnoAModificar {
   id_turno: number;
   medico: {
@@ -18,14 +18,18 @@ interface TurnoAModificar {
 interface ModificarTurnoProps {
   turnoAModificar: TurnoAModificar | null;
   setTurnoAModificar: React.Dispatch<React.SetStateAction<TurnoAModificar | null>>;
+  onSuccess?: () => void | Promise<void>;
 }
 
 export const ModificarTurno = ({
   turnoAModificar,
   setTurnoAModificar,
+  onSuccess,
 }: ModificarTurnoProps) => {
-  const [turnoNuevo, setTurnoNuevo] = useState<any>(null);
 
+  const [turnoNuevo, setTurnoNuevo] = useState<any>(null);
+const [turnoViejo,setTurnoViejo]= useState<any>(null);
+  const [showModificar, setShowModificar] = useState(false);
   //  obtiene los turnos libres del mismo médico y especialidad
   const turnosParaModificar = useTurnosLibres(
     turnoAModificar?.id_especialidad ?? 0,
@@ -69,20 +73,25 @@ const turnosFormateados = turnos
   .filter(Boolean) // quitar nulls
   .sort((a: any, b: any) => (a.id < b.id ? -1 : 1)); // opcional: ordenar
 
-console.log(turnosFormateados,turnosParaModificar);
   // Al seleccionar nuevo turno
-  const seleccionarNuevoTurno = (nuevoTurno: any) => {
-    setTurnoNuevo({
-      fecha: nuevoTurno.fecha,
-      hora: nuevoTurno.hora,
-      id: nuevoTurno.id,
-      legajo_medico: nuevoTurno.legajo_medico,
-      id_especialidad: nuevoTurno.id_especialidad,
+  const seleccionarNuevoTurno = (turnoAModificar: any,nuevoTurno: any) => {
+    setTurnoViejo({
+      fecha: turnoAModificar.fecha_hora_turno,
+      cod_turno: turnoAModificar.cod_turno,
+      legajo_medico: turnoAModificar.legajo_medico,
+      id_especialidad: turnoAModificar.id_especialidad,
+    
     });
-
-    // Podés enviar el nuevo turno al backend o actualizar estado global aquí
-    setTurnoAModificar(null);
-  };
+     console.log(nuevoTurno);
+    setTurnoNuevo({
+      fecha: nuevoTurno.id,
+      cod_turno: turnoAModificar.cod_turno,
+      medico:turnoAModificar.medico,
+      descripcion:turnoAModificar.especialidad_descripcion
+    });
+  // Abrir modal de modificación inmediatamente
+  setShowModificar(true);
+   };
 
   return (
     <>
@@ -111,7 +120,7 @@ console.log(turnosFormateados,turnosParaModificar);
                           {turno.fecha} - {turno.hora}
                         </p>
                       </div>
-                      <Button size="sm" onClick={() => seleccionarNuevoTurno(turno)}>
+                      <Button size="sm" onClick={() => seleccionarNuevoTurno(turnoAModificar,turno)}>
                         <CheckCircle className="h-4 w-4 mr-1" />
                         Seleccionar
                       </Button>
@@ -131,6 +140,17 @@ console.log(turnosFormateados,turnosParaModificar);
           </div>
         </div>
       )}
+
+      {showModificar && (
+        <Modificar
+          turnoViejo={turnoViejo}
+          turnoNuevo={turnoNuevo}
+          setTurnoAModificar={setTurnoAModificar}
+            onClose={() => setShowModificar(false)}
+            onSuccess={onSuccess}
+        />
+      )}
+  
     </>
   );
 };

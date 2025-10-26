@@ -22,6 +22,7 @@ export async function GET() {
         estado_turno,
         dni_paciente,
         fecha_hora_turno,
+        turno_modificado,
         legajo_medico,
         medico!inner(
           legajo_medico,
