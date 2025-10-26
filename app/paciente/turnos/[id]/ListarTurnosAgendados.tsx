@@ -33,7 +33,13 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
         }),
       });
     }
-
+    const turno = await fetch(`/api/lista-espera/notificar-cancelacion`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ cod_turno }),
+    });
     setLoadingCancelar(true);
     console.log("eliminar el turno con el codigo", cod_turno);
     try {
