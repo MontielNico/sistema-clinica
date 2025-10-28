@@ -1,5 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { syncEspecialidades } from "@/lib/medico/helpers";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,9 +35,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const especialidades = data.map((item) => item.especialidad);
+  const especialidades = (data || []).map((item: any) => item.especialidad);
 
     return NextResponse.json(especialidades);
+  } catch (error) {
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { legajo_medico, especialidades } = await request.json();
+
+    // Delegar a helper centralizado
+    try {
+      const inserted = await syncEspecialidades(legajo_medico, especialidades);
+      return NextResponse.json({ success: true, data: inserted });
+    } catch (err: any) {
+      return NextResponse.json({ error: err?.message || 'Error interno' }, { status: 500 });
+    }
   } catch (error) {
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }

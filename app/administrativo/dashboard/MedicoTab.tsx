@@ -212,6 +212,12 @@ export default function MedicoTab() {
                   >
                     {medico.estado || "activo"}
                   </Badge>
+                  <Button
+                  onClick={()=>
+                  (window.location.href = `/administrativo/medicos/${medico.legajo_medico}/datos/modificarDatos`)
+                  }>
+                    Modificar Datos
+                  </Button>
                   {medico?.id_agenda ? (
                     <Button
                       variant="outline"

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { syncEspecialidades } from "@/lib/medico/helpers";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -142,6 +143,63 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest){
+  try {
+    const { legajo_medico, nombre, apellido, dni_medico, tarifa, telefono, matricula, especialidades } = await request.json();
+    console.log("legajo del medico", legajo_medico);
+    console.log(nombre);
+    console.log(apellido);
+    console.log(telefono);
+
+    if (!legajo_medico){
+      return NextResponse.json(
+        {error: "Legajo del paciente requerido"},
+        {status: 400}
+      );
+    }
+
+    const {data, error} = await supabase
+    .from("medico")
+    .update({
+      nombre: nombre,
+      apellido: apellido,
+      telefono: telefono,
+      dni_medico: dni_medico,
+      tarifa: tarifa,
+      matricula: matricula,
+    })
+    .eq("legajo_medico", legajo_medico)
+    .select();
+
+    if (error) {
+      console.error ("Error updateando el medico:", error);
+      return NextResponse.json({error:error.message}, {status: 400});
+    }
+
+    // Si vienen especialidades en el body, delegar la sincronización al helper
+    if (typeof especialidades !== 'undefined') {
+      try {
+        await syncEspecialidades(legajo_medico, especialidades);
+      } catch (err: any) {
+        console.error('Error sincronizando especialidades:', err);
+        return NextResponse.json({ error: err?.message || 'Error sincronizando especialidades' }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({
+      message: "Datos actualizado correctamente!",
+      data: data,
+    });
+  }
+  catch (error) {
+    console.error("Error en el request PUT de medico:", error);
+    return NextResponse.json (
+      {error: "Error al actualizar los datos del medico"},
+      {status: 500}
     );
   }
 }

@@ -170,8 +170,8 @@ export function AddMedicoForm({
     }
 
     try {
-      // Build final matrícula with prefix according to tipoMatricula
-      const buildMatriculaWithPrefix = (
+      // Construccion final de la matricula con el tipoMatricula
+      const construirMatriculaConPrefijo = (
         tipo: string,
         numero: string
       ): string => {
@@ -195,7 +195,7 @@ export function AddMedicoForm({
         return `${prefix}${raw}`.toUpperCase();
       };
 
-      const matriculaFinal = buildMatriculaWithPrefix(tipoMatricula, matricula);
+      const matriculaFinal = construirMatriculaConPrefijo(tipoMatricula, matricula);
       const response = await fetch("/api/medico", {
         method: "POST",
         headers: {
@@ -227,8 +227,8 @@ export function AddMedicoForm({
       setApellido("");
       setEspecialidadesSeleccionadas([]);
       setDni("");
-  setMatricula("");
-  setTipoMatricula("");
+      setMatricula("");
+      setTipoMatricula("");
       setTelefono("");
       setPesosArgentinos("");
       setObrasSocialesSeleccionadas(obrasSociales.map((obra) => obra.id_obra));
@@ -385,7 +385,7 @@ export function AddMedicoForm({
                 <Input
                   id="matricula"
                   type="text"
-                  placeholder="Ej: MN123456"
+                  placeholder="Ej: 123456"
                   required
                   value={matricula}
                   onChange={(e) => setMatricula(e.target.value)}
