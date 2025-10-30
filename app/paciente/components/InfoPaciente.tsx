@@ -76,18 +76,21 @@ const InfoPaciente = ({
           />
         ) : (
           <>
-            <div>
+            <div className="flex flex-row gap-5">
+              <div>
               <label className="text-sm font-medium text-muted-foreground">
                 Nombre
               </label>
               <p className="text-lg">{datosEditables.nombre}</p>
-            </div>
-            <div>
+              </div>
+              <div>
               <label className="text-sm font-medium text-muted-foreground">
                 Apellido
               </label>
               <p className="text-lg">{datosEditables.apellido}</p>
             </div>
+            </div>
+            
             <div>
               <label className="text-sm font-medium text-muted-foreground">
                 DNI
