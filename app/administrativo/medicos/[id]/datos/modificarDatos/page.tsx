@@ -31,8 +31,8 @@ export default function Page() {
 		const fetchMedico = async () => {
 			setLoading(true);
 			try {
-				const res = await fetch(`/api/medico/${legajo}`, {
-					//cache: "no-store",
+				const res = await fetch(`/api/medico/${legajo}?`,{
+					cache: "no-store",
 				});
 				if (!res.ok) {
 					console.error("Error al obtener médico");
@@ -41,6 +41,7 @@ export default function Page() {
 					setLoading(false);
 					return;
 				}
+				console.log(res)
 
 				const medico = await res.json();
 				const parsed: DatosEditables = {
@@ -51,6 +52,7 @@ export default function Page() {
 					matricula: medico.matricula || "",
 					tarifa: medico.tarifa || "",
 				};
+				console.log(parsed);
 
 				setDatos(parsed);
 				setDatosTemp(parsed);
@@ -89,7 +91,6 @@ export default function Page() {
 				setDatos={setDatos as React.Dispatch<React.SetStateAction<DatosEditables>>}
 				setEditando={setEditando}
 				onGuardar={(nuevos) => {
-					
 					console.log("Guardado en page.tsx", nuevos);
 				}}
 			/>

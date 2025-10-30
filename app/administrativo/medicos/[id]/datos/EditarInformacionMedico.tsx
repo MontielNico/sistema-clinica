@@ -1,15 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowLeft, PlusCircle, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface DatosEditables {
     nombre: string;
@@ -19,8 +19,17 @@ interface DatosEditables {
     matricula: string;
     especialidades?: string[];
     tarifa: number;
-    // convenios / obras sociales asignadas (ids)
-    convenios?: string[];
+    convenios?: ConvenioMedico[];
+}
+
+//datos del convenio de medico
+interface ConvenioMedico {
+    id_obra: string;
+    descripcion: string;
+    estado?: string;
+    telefono_contacto?: string | null;
+    sitio_web?: string | null;
+    fecha_alta?: string;
 }
 
 interface EditarInformacionProps {
@@ -57,8 +66,7 @@ function buildMatricula(prefijo: string, numeroMat: string) {
 }
 
 async function guardarDatosEnBD(nuevosDatos: DatosEditables, legajo_medico: string) {
-    console.log ("nuevos datos de medico", nuevosDatos);
-    console.log ("legajo de medico", legajo_medico);
+    
     try {
         // NOTE: enviar a la ruta REST correcta.
         const response = await fetch("/api/medico", {
@@ -94,7 +102,11 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
     const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
     const [especialidadesSeleccionadas, setEspecialidadesSeleccionadas] = useState<string[]>([]);
     const [isLoadingEspecialidades, setIsLoadingEspecialidades] = useState(true);
+    
+    const [convenios, setConvenios] = useState<ConvenioMedico[]>([]);
     const [obrasSociales, setObrasSociales] = useState<{ id_obra: string; descripcion: string }[]>([]);
+    const [modalAbierto, setModalAbierto] = useState(false);
+
     const [obrasSocialesSeleccionadas, setObrasSocialesSeleccionadas] = useState<string[]>([]);
     const [isLoadingObras, setIsLoadingObras] = useState(true);
     const [error, setError] = useState <string | null>(null);
@@ -108,7 +120,8 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
             try {
                 // todas las especialidades
                 const resTODAS = await fetch("/api/especialidades");
-                const listaEspecialidades: Especialidad[] = await resTODAS.json();
+                const listaEspecialidadesJSON = await resTODAS.json();
+                const listaEspecialidades: Especialidad[] = listaEspecialidadesJSON.data;
 
                 // especialidades asignadas al médico
                 const resEspecialidadesAsignadas = await fetch(
@@ -118,9 +131,7 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
                 if (resEspecialidadesAsignadas.ok) {
                     EspecialidadesAsignadas = (await resEspecialidadesAsignadas.json()) || [];
                 }
-
                 setEspecialidades(listaEspecialidades);
-                console.log(listaEspecialidades);
 
                 // guardo sólo los ids que están asignados para marcar los checkboxes
                 const idsAsignadas = EspecialidadesAsignadas.map((e) => String(e.id_especialidad));
@@ -130,16 +141,21 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
                 setDatosTemp((prev) => ({ ...prev, especialidades: idsAsignadas }));
                 // además, cargar obras sociales para futuros convenios
                 try {
-                    const resObras = await fetch("/api/obraSocial"); //modificar
-                    const obrasJson = await resObras.json();
-                    const listaObras: { id_obra: string; descripcion: string }[] = obrasJson.data || [];
-                    setObrasSociales(listaObras);
-                    // si datos tiene convenios, inicializarlos
-                    const conveniosInicial = datos?.convenios || [];
-                    setObrasSocialesSeleccionadas(conveniosInicial);
-                    setDatosTemp((prev) => ({ ...prev, convenios: conveniosInicial }));
+                const resConvenios = await fetch(`/api/medico/medico-obraSocial?legajo_medico=${legajo_medico}`, {
+                    cache: "no-store",
+                });
+                const listaConvenios: ConvenioMedico[] = resConvenios.ok
+                    ? await resConvenios.json()
+                    : [];
+                setConvenios(listaConvenios);
+                
+                setDatosTemp((prev) => ({ ...prev, convenios: listaConvenios }));
+
+                const resObras = await fetch("/api/obraSocial");
+                const obrasJson = await resObras.json();
+                setObrasSociales(obrasJson.data || []);
                 } catch (err) {
-                    console.warn("No se pudieron cargar obras sociales", err);
+                console.warn("Error cargando convenios/obras", err);
                 }
             } catch (err) {
                 console.error("Error cargando especialidades", err);
@@ -208,6 +224,35 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
         // Redirigir al dashboard mostrando la pestaña "medicos"
         router.push("/administrativo/dashboard?tab=medicos");
     };
+
+    // eliminar convenio tentativamente
+    const handleEliminarConvenio = (id_obra: string) => {
+        setConvenios((prev) => prev.filter((c) => c.id_obra !== id_obra));
+        setDatosTemp((prev) => ({
+        ...prev,
+        convenios: prev.convenios?.filter((c) => c.id_obra !== id_obra),
+        }));
+    };
+
+    // agregar convenio tentativamente desde modal
+    const handleAgregarConvenio = (obra: { id_obra: string; descripcion: string }) => {
+        const nuevoConvenio: ConvenioMedico = {
+        id_obra: obra.id_obra,
+        descripcion: obra.descripcion,
+        fecha_alta: new Date().toISOString().split("T")[0],
+        };
+        setConvenios((prev) => [...prev, nuevoConvenio]);
+        setDatosTemp((prev) => ({
+        ...prev,
+        convenios: [...(prev.convenios || []), nuevoConvenio],
+        }));
+        setModalAbierto(false);
+    };
+
+    const obrasDisponibles = obrasSociales.filter(
+        (o) => !convenios.some((c) => c.id_obra === o.id_obra)
+    );
+
 
     return (
         <>
@@ -338,6 +383,80 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
                         }}
                         />
                     </div>
+
+                    {/* Convenios actuales */}
+                    <div className="gird gap-4 mt-6">
+                        <Label>Convenios del médico</Label>
+                        <div className="flex justify-end mb-2">
+                            <Button variant="outline" size="sm" onClick={() => setModalAbierto(true)}>
+                                <PlusCircle className="h-4 w-4 mr-2" /> Añadir convenio
+                            </Button>
+                        </div>
+                        {convenios.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                            El médico no tiene convenios registrados.
+                        </p>
+                        ) : (
+                        <div className="border rounded-lg divide-y">
+                            {convenios.map((conv) => (
+                            <div key={conv.id_obra} className="flex items-center justify-between p-3">
+                                <div>
+                                    <p className="font-medium">{conv.descripcion}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Inicio: {conv.fecha_alta}
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEliminarConvenio(conv.id_obra)}
+                                >
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                            </div>
+                            ))}
+                        </div>
+                        )}
+                    </div>
+                    
+
+                    {/* === Modal de obras sociales disponibles === */}
+                    <Dialog open={modalAbierto} onOpenChange={setModalAbierto}>
+                        <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Seleccionar obra social</DialogTitle>
+                        </DialogHeader>
+                        <div className="max-h-60 overflow-y-auto mt-2">
+                            {obrasDisponibles.length === 0 ? (
+                            <p className="text-sm text-muted-foreground px-2">
+                                No hay obras sociales disponibles para agregar.
+                            </p>
+                            ) : (
+                            obrasDisponibles.map((obra) => (
+                                <div
+                                key={obra.id_obra}
+                                className="flex items-center justify-between px-3 py-2 border-b last:border-none"
+                                >
+                                <span>{obra.descripcion}</span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleAgregarConvenio(obra)}
+                                >
+                                    Agregar
+                                </Button>
+                                </div>
+                            ))
+                            )}
+                        </div>
+                        <div className="flex justify-end mt-3">
+                            <Button variant="ghost" onClick={() => setModalAbierto(false)}>
+                            <X className="h-4 w-4 mr-2" /> Cerrar
+                            </Button>
+                        </div>
+                        </DialogContent>
+                    </Dialog>
+
 
                     {/* Mensaje de error */}
                     {error && (
