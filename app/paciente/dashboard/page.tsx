@@ -79,7 +79,6 @@ export default function PacienteDashboard() {
             <TabsTrigger value="mis-turnos">Mis Turnos</TabsTrigger>
             <TabsTrigger value="buscar-turnos">Sacar turno</TabsTrigger>
             <TabsTrigger value="perfil">Mi Perfil</TabsTrigger>
-            {/* <TabsTrigger value="historial">Historial</TabsTrigger> */}
           </TabsList>
 
           {dniPaciente!=null &&  

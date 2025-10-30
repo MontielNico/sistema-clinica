@@ -106,7 +106,8 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
     );
   }
   return (
-    <Table className="w-full text-m">
+      <div className="w-full max-w-[110vw] mx-auto px-4">
+        <Table className="w-full text-m">
       <TableHeader>
         <TableRow>
           <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -176,15 +177,7 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
             </TableCell>
           </TableRow>
         ))}
-        <DialogCancelar
-          open={dialogOpen}
-          onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) setTurnoACancelar(null);
-          }}
-          loading={loadingCancelar}
-          onConfirm={() => turnoACancelar && cancelarTurno(turnoACancelar)}
-        />
+        
         {!isLoading && turnosAgendados.length === 0 && (
           <TableRow>
             <TableCell
@@ -197,5 +190,15 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
         )}
       </TableBody>
     </Table>
+    <DialogCancelar
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) setTurnoACancelar(null);
+          }}
+          loading={loadingCancelar}
+          onConfirm={() => turnoACancelar && cancelarTurno(turnoACancelar)}
+        />
+    </div>
   );
 };

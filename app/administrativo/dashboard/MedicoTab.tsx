@@ -185,7 +185,7 @@ export default function MedicoTab() {
                   <div className="flex flex-wrap gap-1">
                     {medico.especialidades && medico.especialidades.length > 0 ? (
                       medico.especialidades.map((especialidad: any, index: number) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
+                        <Badge key={index} variant="default" className="text-xs">
                           {especialidad.descripcion || "Sin nombre"}
                         </Badge>
                       ))
@@ -195,7 +195,7 @@ export default function MedicoTab() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={medico.estado === "activo" ? "default" : "secondary"}>
+                  <Badge variant={medico.estado === "activo" ? "secondary" : "outline"}>
                     {medico.estado || "activo"}
                   </Badge>
                 </TableCell>

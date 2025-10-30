@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FileText } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface ObraSocial {
   id_obra: string | number;
@@ -264,83 +265,87 @@ export const ObraSocialTab = () => {
         </div>
       )}
 
-      <div className="grid gap-4">
-        {obras.map((obra) => (
-          <Card key={String(obra.id_obra)}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="bg-primary/10 p-2 rounded-lg">
-                    <FileText className="h-4 w-4 text-primary" />
-                  </div>
+        <div className="w-full overflow-x-auto">
+        <Table className="w-full">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-left">Obra Social</TableHead>
+              <TableHead className="text-left">Estado</TableHead>
+              <TableHead className="text-left">Nro. Teléfono</TableHead>
+              <TableHead className="text-left">Sitio Web</TableHead>
+              <TableHead className="text-left">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {obras.map((obra) => (
+              <TableRow key={String(obra.id_obra)}>
+                <TableCell>
                   <div>
-                    <p className="font-medium">{safeTrim(obra.descripcion)}</p>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">
-                        Vigencia:{" "}
-                        {new Date(obra.fecha_cambio_estado).toLocaleDateString()}
-                      </p>
-                      {safeTrim(obra.telefono_contacto) && (
-                        <p className="text-sm text-muted-foreground">
-                          Teléfono: {safeTrim(obra.telefono_contacto)}
-                        </p>
-                      )}
-                      {safeTrim(obra.sitio_web) && (
-                        <p className="text-sm text-muted-foreground">
-                          Sitio: {safeTrim(obra.sitio_web)}
-                        </p>
-                      )}
+                    <div className="font-medium">{safeTrim(obra.descripcion)}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Vigencia: {new Date(obra.fecha_cambio_estado).toLocaleDateString()}
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
+                </TableCell>
+                <TableCell>
                   <Badge
                     variant={
                       obra.estado === "Habilitado"
-                        ? "default"
-                        : obra.estado === "Pendiente"
                         ? "secondary"
-                        : "destructive"
+                        : obra.estado === "Pendiente"
+                        ? "default"
+                        : "outline"
                     }
                   >
                     {obra.estado}
                   </Badge>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEdit(obra)}
-                    disabled={isProcessing}
-                  >
-                    Modificar
-                  </Button>
-
-                  {obra.estado === "Habilitado" ? (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() =>
-                        handleDeshabilitar(obra.id_obra, safeTrim(obra.descripcion))
-                      }
-                      disabled={isProcessing}
-                    >
-                      Deshabilitar
-                    </Button>
+                </TableCell>
+                <TableCell>{safeTrim(obra.telefono_contacto) || "-"}</TableCell>
+                <TableCell>
+                  {safeTrim(obra.sitio_web) ? (
+                    <a href={safeTrim(obra.sitio_web)} target="_blank" rel="noreferrer" className="text-primary underline">
+                      {safeTrim(obra.sitio_web)}
+                    </a>
                   ) : (
+                    "-"
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
                     <Button
-                      variant="secondary"
+                      variant="outline"
                       size="sm"
-                      onClick={() => handleHabilitar(obra)}
+                      onClick={() => openEdit(obra)}
                       disabled={isProcessing}
                     >
-                      Programar Habilitación
+                      Modificar
                     </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+
+                    {obra.estado === "Habilitado" ? (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeshabilitar(obra.id_obra, safeTrim(obra.descripcion))}
+                        disabled={isProcessing}
+                      >
+                        Deshabilitar
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleHabilitar(obra)}
+                        disabled={isProcessing}
+                      >
+                        Programar Habilitación
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
       {obras.length === 0 && !isLoading && (

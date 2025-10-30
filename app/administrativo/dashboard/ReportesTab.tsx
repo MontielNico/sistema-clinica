@@ -48,7 +48,7 @@ export const ReportesTab = () => {
         if (!response.ok) throw new Error("Error al obtener especialidades");
         const especialidadesData: Especialidad[] = await response.json();
         console.log("Especialidades traidas", especialidadesData);
-        setEspecialidades(especialidadesData);
+        setEspecialidades(especialidadesData.data);
       } catch (error) {
         setEspecialidades([]);
       } finally {
