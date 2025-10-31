@@ -17,6 +17,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { FiltrosReportes } from "./FiltrosReportes";
+import { GraficoDemandaTorta } from "./GraficoDemandaTorta";
 
 interface Turno {
   cod_turno: number;
@@ -31,12 +32,40 @@ interface Turno {
   estado_turno: string;
   especialidad: Especialidad;
 }
+interface Demanda {
+  codigo: string;
+  nombre: string;
+  numero: number;
+}
 
 interface Especialidad {
   id_especialidad: number;
   descripcion: string;
 }
+function calculaDemanda(turnos: Turno[]): Demanda[] {
+  const demandaMap = new Map<
+    string,
+    {
+      codigo: string;
+      nombre: string;
+      numero: number;
+    }
+  >();
 
+  turnos.forEach((turno) => {
+    const key = `${turno.especialidad.descripcion} `;
+    if (!demandaMap.has(key)) {
+      demandaMap.set(key, {
+        codigo: `${turno.especialidad?.id_especialidad}`,
+        nombre: turno.especialidad?.descripcion,
+        numero: 1,
+      });
+    } else {
+      demandaMap.get(key)!.numero += 1;
+    }
+  });
+  return Array.from(demandaMap.values());
+}
 interface Props {
   turnos: Turno[];
   especialidades: Especialidad[];
@@ -86,7 +115,7 @@ export const ReporteDemandaEspecialidad = ({
         const finYMD = new Date(fechaFin).toISOString().slice(0, 10);
         if (turnoYMD > finYMD) return false;
       }
-      if (especialidadSeleccionada) {
+      if (especialidadSeleccionada && especialidadSeleccionada !== "") {
         if (
           String(turno.especialidad.id_especialidad) !==
             especialidadSeleccionada &&
@@ -98,7 +127,10 @@ export const ReporteDemandaEspecialidad = ({
       return true;
     });
   }, [turnos, fechaInicio, fechaFin, especialidadSeleccionada]);
-
+  const demanda = React.useMemo(
+    () => calculaDemanda(filteredTurnos),
+    [filteredTurnos]
+  );
   return (
     <Card>
       <CardHeader>
@@ -120,68 +152,31 @@ export const ReporteDemandaEspecialidad = ({
           mostrarEspecialidad={false}
           mostrarMedico={false}
         />
-        <Table className="w-full text-sm mt-6">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Código</TableHead>
-              <TableHead>Paciente</TableHead>
-              <TableHead>Médico</TableHead>
-              <TableHead>Especialidad</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Hora</TableHead>
-              <TableHead>Estado</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredTurnos.map((turno) => {
-              const { fecha, hora } = formatearFechaHora(
-                turno.fecha_hora_turno
-              );
-              return (
-                <TableRow key={turno.cod_turno}>
-                  <TableCell>#{turno.cod_turno}</TableCell>
-                  <TableCell>
-                    {turno.nombre_paciente} {turno.apellido_paciente}
-                    <br />
-                    <span className="text-xs text-gray-500">
-                      DNI: {turno.dni_paciente}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {turno.nombre_medico} {turno.apellido_medico}
-                    <br />
-                    <span className="text-xs text-gray-500">
-                      Legajo: {turno.legajo_medico}
-                    </span>
-                  </TableCell>
-                  <TableCell>{turno.especialidad?.descripcion}</TableCell>
-                  <TableCell>{fecha}</TableCell>
-                  <TableCell>{hora}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium border-2 ${
-                        turno.estado_turno === "Pendiente de pago"
-                          ? "bg-orange-50 text-orange-700 border-orange-300"
-                          : turno.estado_turno === "Pagado" ||
-                              turno.estado_turno === "Confirmado"
-                            ? "bg-green-50 text-green-700 border-green-300"
-                            : turno.estado_turno === "Cancelado"
-                              ? "bg-red-50 text-red-700 border-red-300"
-                              : turno.estado_turno === "Pendiente"
-                                ? "bg-yellow-50 text-yellow-700 border-yellow-300"
-                                : turno.estado_turno === "Reasignado"
-                                  ? "bg-blue-50 text-blue-700 border-blue-300"
-                                  : "bg-gray-50 text-gray-700 border-gray-300"
-                      }`}
-                    >
-                      {turno.estado_turno || "Sin estado"}
-                    </span>
-                  </TableCell>
+        {demanda.length === 0 ? (
+          <div className="text-center text-sm text-gray-500 my-4">
+            No hay turnos para los filtros seleccionados.
+          </div>
+        ) : (
+          <>
+            <GraficoDemandaTorta demanda={demanda} />
+            <Table className="w-full text-sm mt-6">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Especialidad</TableHead>
+                  <TableHead>Turnos</TableHead>
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+              </TableHeader>
+              <TableBody>
+                {demanda.map((dem) => (
+                  <TableRow key={dem.codigo}>
+                    <TableCell>{dem.nombre}</TableCell>
+                    <TableCell>{dem.numero}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </>
+        )}
       </CardContent>
     </Card>
   );
