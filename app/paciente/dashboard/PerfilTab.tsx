@@ -60,10 +60,6 @@ export const PerfilTab = () => {
 
   return (
     <TabsContent value="perfil" className="space-y-6">
-      {/* <div className="flex justify-center items-center">
-        <h2 className="text-2xl font-bold">Mi Perfil</h2>
-      </div> */}
-
       <div className="flex justify-center">
         <InfoPaciente pacienteData={pacienteData} userId={userId} />
       </div>

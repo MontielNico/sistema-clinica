@@ -76,7 +76,6 @@ export function LoginForm({
         return;
       }
 
-      console.log("🔍 Buscando en profiles para:", email);
 
       // 1. Buscar primero en profiles (pacientes)
       const { data: profileData, error: profileError } = await supabase

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Clock, CheckCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,25 +32,39 @@ export const TurnosDisponibles = ({
   //Mostrar “Ver más”
   const mostrarMas = () => setMostrarCantidad((prev) => prev + 15);
 
-  //  Filtrar turnos a partir de 24 horas después de la hora actual
-const horaMinima = new Date();
-horaMinima.setHours(horaMinima.getHours() + 24); // Suma 24 horas a la hora actual
+  // Local state for available turns so child components (Agendar) can update it
+  const [turnosDisponibles, setTurnosDisponibles] = useState<any[]>([]);
 
-const turnosFormateados = libres
-  .filter(t => new Date(t.iso) >= horaMinima)
-  .map(t => {
-  const fecha = new Date(t.iso);
-  const fechaStr = fecha.toLocaleDateString("es-AR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "2-digit",
-  });
-  const horaStr = fecha.toLocaleTimeString("es-AR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return { id: t.iso, fecha: fechaStr, hora: horaStr, legajo_medico: t.legajo_medico,id_especialidad: filtroEspecialidad };
-});
+  // 
+  useEffect(() => {
+    setTurnosDisponibles(libres ?? []);
+  }, [libres]);
+
+  // Filtrar turnos a partir de 24 horas después de la hora actual
+  const horaMinima = new Date();
+  horaMinima.setHours(horaMinima.getHours() + 24); // Suma 24 horas a la hora actual
+
+  const turnosFormateados = (turnosDisponibles ?? [])
+    .filter((t) => new Date(t.iso) >= horaMinima)
+    .map((t) => {
+      const fecha = new Date(t.iso);
+      const fechaStr = fecha.toLocaleDateString("es-AR", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+      });
+      const horaStr = fecha.toLocaleTimeString("es-AR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return {
+        id: t.iso,
+        fecha: fechaStr,
+        hora: horaStr,
+        legajo_medico: t.legajo_medico,
+        id_especialidad: filtroEspecialidad,
+      };
+    });
 
 
   //  Estado visual
@@ -65,7 +79,7 @@ const turnosFormateados = libres
     );
   if (!libres || libres.length === 0)
     return (
-      <NoMatches filtroEspecialidad={filtroEspecialidad} />
+      <NoMatches filtroEspecialidad={String(filtroEspecialidad)} />
      
     );
 
@@ -116,7 +130,7 @@ const turnosFormateados = libres
           turnoAConfirmar={turnoAConfirmar}
           setTurnoAConfirmar={setTurnoAConfirmar}
           setTurnosAgendados={setTurnosAgendados}
-          setTurnosDisponibles={() => {}}
+          setTurnosDisponibles={setTurnosDisponibles}
         />
       )}
     </div>
