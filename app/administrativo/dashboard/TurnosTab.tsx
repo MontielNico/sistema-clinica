@@ -98,6 +98,7 @@ export const TurnosTab = () => {
       const turnoDate = new Date(turno.fecha_hora_turno);
       const turnoYMD = turnoDate.toISOString().slice(0, 10);
 
+      console.log();
       if (filters.fechaInicio) {
         const inicioYMD = new Date(filters.fechaInicio)
           .toISOString()
@@ -148,9 +149,7 @@ export const TurnosTab = () => {
   };
 
   if (loading) {
-    return (
-      <SkeletonTurnosTab/>
-    );
+    return <SkeletonTurnosTab />;
   }
 
   return (
