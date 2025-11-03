@@ -10,6 +10,7 @@ interface AgendarProps {
   setTurnosDisponibles: React.Dispatch<React.SetStateAction<any[]>>;
 }
 interface TurnoBody {
+  cod_turno?:number
   legajo_medico: number;
   nombre_medico: string;
   dni_paciente: number;
@@ -160,7 +161,7 @@ const Agendar = ({
       ]);
       setTurnosDisponibles((prev) =>
         prev.map((t) =>
-          t.id === turnoAConfirmar.id ? { ...t, estado: "ocupado" } : t
+          t.fecha_hora_turno === turnoAConfirmar.fecha_hora_turno ? { ...t, estado: "ocupado" } : t
         )
       );
 
@@ -262,6 +263,10 @@ const Agendar = ({
             <Button
               onClick={() => {
                 setShowSuccess(false);
+                setTurnosAgendados(prev => [...prev, turnoAConfirmar]);
+                setTurnosDisponibles(prev => 
+                  prev.filter(t => t.iso !== turnoAConfirmar.id)
+                );
                 setTurnoAConfirmar(null);
               }}
             >

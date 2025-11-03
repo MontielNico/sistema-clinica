@@ -35,9 +35,19 @@ export const TurnosDisponibles = ({
   // Local state for available turns so child components (Agendar) can update it
   const [turnosDisponibles, setTurnosDisponibles] = useState<any[]>([]);
 
-  // 
+  // Actualizar turnos disponibles cuando cambien los turnos libres
   useEffect(() => {
-    setTurnosDisponibles(libres ?? []);
+    if (libres) {
+      setTurnosDisponibles(current => {
+        // Filtrar cualquier turno que ya esté en turnosAgendados
+        const turnosNoAgendados = libres.filter(turnoLibre => 
+          !turnosAgendados.some(agendado => 
+            agendado.id === turnoLibre.iso
+          )
+        );
+        return turnosNoAgendados;
+      });
+    }
   }, [libres]);
 
   // Filtrar turnos a partir de 24 horas después de la hora actual
