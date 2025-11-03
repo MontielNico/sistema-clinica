@@ -126,6 +126,7 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
       </TableHeader>
       <TableBody>
         {turnosAgendados.map((turno) => (
+           
           <TableRow key={turno.cod_turno}>
             <TableCell>
               {turno.medico
@@ -135,9 +136,17 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
                 : "-"}
             </TableCell>
 
-            <TableCell>{turno.fecha_hora_turno.split("T")[0]}</TableCell>
             <TableCell>
-              {turno.fecha_hora_turno.split("T")[1].slice(0, 5)}
+              {new Date(turno.fecha_hora_turno).toLocaleDateString("es-AR", {
+                timeZone: "America/Argentina/Buenos_Aires"
+              })}
+              </TableCell>
+            <TableCell>
+              {new Date(turno.fecha_hora_turno).toLocaleTimeString("es-AR", {
+                timeZone: "America/Argentina/Buenos_Aires",
+                hour: "2-digit",
+                minute: "2-digit"
+              })}
             </TableCell>
 
             <TableCell>

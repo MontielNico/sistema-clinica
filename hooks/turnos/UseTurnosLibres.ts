@@ -149,17 +149,17 @@ if (!agenda) {
 function dateWithTime(base: Date, time: string): Date {
   const [hh, mm, ss = "0"] = time.split(":");
   const d = new Date(base);
-  d.setHours(Number(hh) || 0, Number(mm) || 0, Number(ss) || 0, 0);
-  return d;
+  // Asegurarnos de que la fecha base esté en Argentina
+  const dateStr = d.toLocaleDateString("en-US", { timeZone: "America/Argentina/Buenos_Aires" });
+  const newDate = new Date(dateStr);
+  newDate.setHours(Number(hh) || 0, Number(mm) || 0, Number(ss) || 0, 0);
+  return newDate;
 }
 
 export function generarTurnosLibres(
   agendas: Agenda[],
   turnosOcupados: TurnoBody[]
 ): string[] {
-  console.log("🩺 Agenda:", agendas);
-console.log("📅 Días activos:", agendas.dia_semana);
-console.log("💤 Turnos ocupados:", turnosOcupados.length);
 
   const libres: string[] = [];
   const hoy = new Date();
@@ -175,12 +175,18 @@ ayer.setDate(hoy.getDate()-1);
       (t) => t.legajo_medico === agenda.legajo_medico
     );
 
+    // Convertir fechas ocupadas al formato ISO para comparación
     const ocupadas = new Set(
-      turnosDelMismoMedico.map((t) =>
-        new Date(t.fecha_hora_turno).toISOString().slice(0, 16)
-      )
+      turnosDelMismoMedico.map((t) => {
+        // Si es string ISO, usar directamente
+        if (typeof t.fecha_hora_turno === 'string') {
+          return t.fecha_hora_turno.slice(0, 16);
+        }
+        // Si es Date, convertir a ISO
+        return new Date(t.fecha_hora_turno).toISOString().slice(0, 16);
+      })
     );
-
+    console.log("Turnos ocupados:", Array.from(ocupadas));
     const inicioAgenda = new Date(agenda.fechainiciovigencia);
     const finAgenda = new Date(agenda.fechafinvigencia);
     const duracionMin = parseDuracionToMinutos(agenda.duracionturno);
@@ -205,13 +211,19 @@ ayer.setDate(hoy.getDate()-1);
         turno < end;
         turno = new Date(turno.getTime() + duracionMs)
       ) {
-        const iso = turno.toISOString().slice(0, 16);
+        const iso = new Date(
+          turno.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" })
+        ).toISOString().slice(0, 16);
 
         //  Evitar horarios pasados de ayer
         if (turno < ayer) continue;
 
         // Solo agregar si no está ocupado para este médico
-        if (!ocupadas.has(iso)) libres.push(iso);
+        if (!ocupadas.has(iso)) {
+          libres.push(iso);
+        } else {
+          console.log("Turno ocupado, no agregado:", iso);
+        }
       }
 
       fecha.setDate(fecha.getDate() + 1);

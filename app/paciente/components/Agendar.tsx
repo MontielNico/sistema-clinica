@@ -132,7 +132,7 @@ const Agendar = ({
       dni_paciente: dniPaciente,
       nombre_medico: medicoNombre,
       id_obra: selectedObraSocial === "null" ? null : selectedObraSocial,
-      fecha_hora_turno: new Date(`${turnoAConfirmar.id}`),
+      fecha_hora_turno: turnoAConfirmar.id, // Send ISO string directly
       id_especialidad:
         turnoAConfirmar.id_especialidad ?? turnoAConfirmar.especialidad_id,
       desc_especialidad: especialidadDesc,
