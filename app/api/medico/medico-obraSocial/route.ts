@@ -37,17 +37,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // 🔧 Aplanar resultados y manejar casos donde obra_social sea null
-  const obrasSociales = (data || [])
-    .filter((item) => item.obra_social)
-    .map((item) => ({
-      id_obra: item.obra_social.id_obra,
-      descripcion: item.obra_social.descripcion,
-      estado: item.obra_social.estado,
-      telefono_contacto: item.obra_social.telefono_contacto ?? null,
-      sitio_web: item.obra_social.sitio_web ?? null,
-      fecha_alta: item.fecha_alta,
-    }));
-
-  return NextResponse.json(obrasSociales);
+  return NextResponse.json(data);
 }

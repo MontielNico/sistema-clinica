@@ -56,6 +56,7 @@ const Agendar = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [especialidadDesc, setEspecialidadDesc] = useState<string>("");
   const { userId } = useAuth();
+  const [medico, setMedico] = useState<any>();
 
   // Función para buscar la descripción de la especialidad
   const buscarEspecialidad = async () => {
@@ -64,7 +65,7 @@ const Agendar = ({
         cache: "no-store",
       });
       if (!res.ok) throw new Error("Error al obtener especialidades");
-      const especialidades: any[] = await res.json();
+      const especialidades = await res.json();
       console.log(especialidades);
       // Buscar la especialidad que coincida con el ID
       const especialidad = especialidades.data.find(
@@ -93,6 +94,7 @@ const Agendar = ({
       if (medico) {
         const nombreCompleto = `${medico.nombre} ${medico.apellido}`.trim();
         setMedicoNombre(nombreCompleto);
+        setMedico(medico);
       }
     } catch (error) {
       console.error("Error al buscar médico:", error);
@@ -137,7 +139,7 @@ const Agendar = ({
       id_especialidad:
         turnoAConfirmar.id_especialidad ?? turnoAConfirmar.especialidad_id,
       desc_especialidad: especialidadDesc,
-      estado_turno: "confirmado",
+      estado_turno: "Reservado",
       userId: userId,
     };
     return agendarTurno(payload);
@@ -175,8 +177,6 @@ const Agendar = ({
   //busca las obras scoiales del mdico
   const getObrasSociales = async () => {
     if (!turnoAConfirmar.legajo_medico) return;
-
-    const fetchObras = async () => {
       try {
         const res = await fetch(
           `/api/medico/medico-obraSocial?legajo_medico=${turnoAConfirmar.legajo_medico}`,
@@ -185,22 +185,38 @@ const Agendar = ({
           }
         );
         const json = await res.json();
-        if (!res.ok)
-          throw new Error(json.error || "Error al obtener obras sociales");
-        setObrasSociales(json);
+
+        const parsed = json.map((item:any)=>({
+          id_obra: item.obra_social?.id_obra,
+          descripcion: item.obra_social?.descripcion,
+          estado: item.obra_social?.estado,
+          telefono_contacto: item.obra_social?.telefono_contacto,
+          sitio_web: item.obra_social?.sitio_web,
+          fecha_alta: item.fecha_alta,
+        }));
+
+        if (!res.ok) throw new Error(json.error || "Error al obtener obras sociales");
+        setObrasSociales(parsed);
       } catch (err: any) {
         setObrasSociales([]);
       }
-    };
   };
-  getObrasSociales();
+
+  //Busca las obras sociales
+  React.useEffect(()=>{
+    if(turnoAConfirmar?.legajo_medico){
+      getObrasSociales();
+    }
+  }, [turnoAConfirmar?.legajo_medico]);
+
+
   return (
     <>
       {!showSuccess && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h3 className="text-xl font-bold mb-4">
-              Debe pagar el turno para confirmarlo
+              Debe abonar el turno para reservarlo
             </h3>
             <p className="mb-4">
               Médico: <b>{medicoNombre || "Cargando..."}</b> <br />
@@ -215,9 +231,13 @@ const Agendar = ({
             />
 
             {/* aparece pagar solo si eligio particular */}
-            {selectedObraSocial === "null" && (
+            {selectedObraSocial === "null" ? (
               <Button className="w-full mb-2" onClick={pagarYConfirmarTurno}>
-                Pagar turno
+              Pagar turno ($ {medico?.tarifa})
+              </Button>
+            ) : (
+              <Button className="w-full mb-2" onClick={pagarYConfirmarTurno}>
+              Confirmar turno
               </Button>
             )}
 
