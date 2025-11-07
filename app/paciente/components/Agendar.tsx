@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "@/hooks/useAuth/useAuth";
 import { Button } from "@/components/ui/button";
 import ObrasSocialesMedico from "./ObrasSocialesMedico";
+import DialogPagoTarjeta from "./DialogPagar";
 
 interface AgendarProps {
   turnoAConfirmar: any;
@@ -57,6 +58,7 @@ const Agendar = ({
   const [especialidadDesc, setEspecialidadDesc] = useState<string>("");
   const { userId } = useAuth();
   const [medico, setMedico] = useState<any>();
+  const [showPago, setShowPago] = useState(false);
 
   // Función para buscar la descripción de la especialidad
   const buscarEspecialidad = async () => {
@@ -232,13 +234,29 @@ const Agendar = ({
 
             {/* aparece pagar solo si eligio particular */}
             {selectedObraSocial === "null" ? (
-              <Button className="w-full mb-2" onClick={pagarYConfirmarTurno}>
-              Pagar turno ($ {medico?.tarifa})
+              <Button className="w-full mb-2" onClick={()=>setShowPago(true)}>
+              Confirmar turno
               </Button>
             ) : (
               <Button className="w-full mb-2" onClick={pagarYConfirmarTurno}>
               Confirmar turno
               </Button>
+            )}
+
+            {showPago && (
+            <DialogPagoTarjeta
+                turno={{
+                  ...turnoAConfirmar,
+                  nombre_medico: medicoNombre,
+                  desc_especialidad: especialidadDesc,
+                  tarifa: medico?.tarifa,
+                }}
+                onCerrar={() => setShowPago(false)}
+                onPagoExitoso={async () => {
+                  setShowPago(false);
+                  await pagarYConfirmarTurno();
+                }}
+              />
             )}
 
             <Button
