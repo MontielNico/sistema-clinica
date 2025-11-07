@@ -1,4 +1,5 @@
 "use client";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -190,14 +191,13 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
         });
     }, [tipoMatricula, numeroMatricula, setDatosTemp]);
 
-    // handler para toggle
+    // Ya no necesitamos este handler porque el RadioGroup maneja la selección directamente
+    // Lo mantenemos por compatibilidad con otras partes del código que puedan usarlo
     const handleEspecialidadChange = (id: string, checked: boolean) => {
-        setEspecialidadesSeleccionadas((prev) => {
-            const next = checked ? [...prev.filter((x) => x !== id), id] : prev.filter((x) => x !== id);
-            // actualizar datosTemp.especialidades si es necesario
-            setDatosTemp((prevDatos) => ({ ...prevDatos, especialidades: next }));
-            return next;
-        });
+        if (checked) {
+            setEspecialidadesSeleccionadas([id]);
+            setDatosTemp((prevDatos) => ({ ...prevDatos, especialidades: [id] }));
+        }
     };
     const handleGuardar = async () => {
         try {
@@ -356,22 +356,27 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
                     {/* Especialidades */}
                     <div className="grid gap-4">
                         <Label>Especialidades</Label>
-                        <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto border rounded-lg p-4">
+                        <div className="grid gap-3 max-h-60 overflow-y-auto border rounded-lg p-4">
                             {isLoadingEspecialidades ? (
                                 <div>Cargando especialidades...</div>
                             ) : (
-                                especialidades.map((esp) => (
-                                    <div key={esp.id_especialidad} className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id={`esp-${esp.id_especialidad}`}
-                                            checked={especialidadesSeleccionadas.includes(String(esp.id_especialidad))}
-                                            onCheckedChange={(checked) => handleEspecialidadChange(String(esp.id_especialidad), checked as boolean)}
-                                        />
-                                        <Label htmlFor={`esp-${esp.id_especialidad}`} className="text-sm font-normal cursor-pointer">
-                                            {esp.descripcion}
-                                        </Label>
-                                    </div>
-                                ))
+                                <RadioGroup
+                                    value={especialidadesSeleccionadas[0] || ""}
+                                    onValueChange={(val) => setEspecialidadesSeleccionadas([val])}
+                                    className="grid grid-cols-2 gap-3"
+                                >
+                                    {especialidades.map((esp) => (
+                                        <div key={esp.id_especialidad} className="flex items-center space-x-2">
+                                            <RadioGroupItem
+                                                value={String(esp.id_especialidad)}
+                                                id={`esp-${esp.id_especialidad}`}
+                                            />
+                                            <Label htmlFor={`esp-${esp.id_especialidad}`} className="text-sm font-normal cursor-pointer">
+                                                {esp.descripcion}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </RadioGroup>
                             )}
                         </div>
                     </div>
