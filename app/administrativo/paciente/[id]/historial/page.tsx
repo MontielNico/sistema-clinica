@@ -67,7 +67,7 @@ return (
                             <td className="border border-gray-300 px-4 py-2">{a.fecha_hora_turno}</td>
                             <td className="border border-gray-300 px-4 py-2">{a.cod_turno}</td>
                             <td className="border border-gray-300 px-4 py-2">{`${a.medico.nombre} ${a.medico.apellido}`}</td>
-                            <td className="border border-gray-300 px-4 py-2">{a.medico.especialidad.descripcion}</td>
+                            <td className="border border-gray-300 px-4 py-2">{a.especialidad.descripcion}</td>
                         </tr>
                     ))}
                 </tbody>

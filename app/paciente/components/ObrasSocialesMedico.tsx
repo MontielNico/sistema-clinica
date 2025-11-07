@@ -36,9 +36,10 @@ const ObrasSocialesMedico = ({ obrasSociales, onObraSocialChange }: ObrasSociale
         value={selected}
         onChange={handleChange}
       >
+        <option value="null">Particular</option>
         {obrasSociales && obrasSociales.length > 0 ? (
           obrasSociales.map((obraSocial) => (
-            <option key={obraSocial.id_obra} value={obraSocial.descripcion}>
+            <option key={obraSocial.id_obra} value={String(obraSocial.id_obra)}>
               {obraSocial.descripcion}
             </option>
           ))

@@ -44,8 +44,9 @@ export async function GET(
         )
     `
     )
+    .order("fecha_hora_turno", {ascending: false})
     .eq("dni_paciente", paciente.dni_paciente)
-    .eq("presencia_turno", false);
+    .or("presencia_turno.eq.false");
 
   if (errorAusencias) {
     return NextResponse.json(

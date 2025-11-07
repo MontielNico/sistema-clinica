@@ -14,7 +14,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FileText } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface ObraSocial {
   id_obra: string | number;
@@ -79,7 +86,10 @@ export const ObraSocialTab = () => {
     }
   };
 
-  const handleDeshabilitar = async (id_obra: string | number, descripcion: string) => {
+  const handleDeshabilitar = async (
+    id_obra: string | number,
+    descripcion: string
+  ) => {
     try {
       setIsProcessing(true);
       const response = await fetch(`/api/obraSocial`, {
@@ -116,11 +126,12 @@ export const ObraSocialTab = () => {
       setError("La fecha de vigencia es requerida");
       return;
     }
-
-    const fechaSeleccionada = new Date(nuevaFecha);
-    const hoy = new Date();
-    fechaSeleccionada.setHours(0, 0, 0, 0);
-    hoy.setHours(0, 0, 0, 0);
+    console.log();
+    const fechaSeleccionada = new Date(nuevaFecha).toISOString().slice(0, 10);
+    const hoy = new Date().toISOString().slice(0, 10);
+    // fechaSeleccionada.setHours(0, 0, 0, 0);
+    //  hoy.setHours(0, 0, 0, 0);
+    console.log("fecha seleccionada por el usuario ", fechaSeleccionada);
 
     if (fechaSeleccionada < hoy) {
       setError("La fecha de vigencia no puede ser anterior a hoy");
@@ -259,13 +270,18 @@ export const ObraSocialTab = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           <p className="text-sm">{error}</p>
-          <Button variant="outline" size="sm" onClick={loadObras} className="mt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadObras}
+            className="mt-2"
+          >
             Reintentar
           </Button>
         </div>
       )}
 
-        <div className="w-full overflow-x-auto">
+      <div className="w-full overflow-x-auto">
         <Table className="w-full">
           <TableHeader>
             <TableRow>
@@ -281,9 +297,12 @@ export const ObraSocialTab = () => {
               <TableRow key={String(obra.id_obra)}>
                 <TableCell>
                   <div>
-                    <div className="font-medium">{safeTrim(obra.descripcion)}</div>
+                    <div className="font-medium">
+                      {safeTrim(obra.descripcion)}
+                    </div>
                     <div className="text-xs text-muted-foreground">
-                      Vigencia: {new Date(obra.fecha_cambio_estado).toLocaleDateString()}
+                      Vigencia:{" "}
+                      {new Date(obra.fecha_cambio_estado).toLocaleDateString()}
                     </div>
                   </div>
                 </TableCell>
@@ -293,8 +312,8 @@ export const ObraSocialTab = () => {
                       obra.estado === "Habilitado"
                         ? "secondary"
                         : obra.estado === "Pendiente"
-                        ? "default"
-                        : "outline"
+                          ? "default"
+                          : "outline"
                     }
                   >
                     {obra.estado}
@@ -303,7 +322,12 @@ export const ObraSocialTab = () => {
                 <TableCell>{safeTrim(obra.telefono_contacto) || "-"}</TableCell>
                 <TableCell>
                   {safeTrim(obra.sitio_web) ? (
-                    <a href={safeTrim(obra.sitio_web)} target="_blank" rel="noreferrer" className="text-primary underline">
+                    <a
+                      href={safeTrim(obra.sitio_web)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary underline"
+                    >
                       {safeTrim(obra.sitio_web)}
                     </a>
                   ) : (
@@ -327,7 +351,12 @@ export const ObraSocialTab = () => {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => handleDeshabilitar(obra.id_obra, safeTrim(obra.descripcion))}
+                        onClick={() =>
+                          handleDeshabilitar(
+                            obra.id_obra,
+                            safeTrim(obra.descripcion)
+                          )
+                        }
                         disabled={isProcessing}
                       >
                         Deshabilitar
@@ -382,7 +411,8 @@ export const ObraSocialTab = () => {
                 min={new Date().toISOString().split("T")[0]}
               />
               <p className="text-xs text-gray-500">
-                La obra social cambiará automáticamente a "Habilitado" en esta fecha.
+                La obra social cambiará automáticamente a "Habilitado" en esta
+                fecha.
               </p>
             </div>
           </div>

@@ -18,9 +18,9 @@ import React, { useState, useEffect } from "react";
 import { GraficoDemandaTorta } from "./GraficoDemandaTorta";
 
 interface Demanda {
-  codigo: string; // puede ser legajo, id, etc.
+  codigo: string;
   nombre: string;
-  numero: number; // cantidad de turnos
+  numero: number;
 }
 
 interface Especialidad {
