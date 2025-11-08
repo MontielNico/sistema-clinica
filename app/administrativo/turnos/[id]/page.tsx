@@ -18,7 +18,7 @@ export default function TurnoDetalle({params}:{params: {id: string}}) {
   const { userId } = useAuth();
   const router = useRouter();
   const [administrativo, setAdministrativo] = useState<boolean | null>(null);
-  
+
   const handleUserType= async() =>{
       // Call server-side API to get profile by userId
       try {
@@ -40,7 +40,7 @@ export default function TurnoDetalle({params}:{params: {id: string}}) {
         console.error("Error fetching profile via API:", err);
       }
   }
-   
+
   useEffect(()=>{
     const fetchData = async() => {
       const res = await fetch(`/api/turnos/turno-codigo?cod_turno=${cod_turno}`, {cache: "no-store"});
@@ -50,7 +50,7 @@ export default function TurnoDetalle({params}:{params: {id: string}}) {
     };
     fetchData();
   },[]);
-  
+
   // Check user type when userId becomes available
   useEffect(() => {
     if (!userId) return;

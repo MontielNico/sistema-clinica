@@ -1,10 +1,10 @@
-//OBTENER TODOS LOS TURNOS DE LA CLINICA
+// app/api/turnos/todos/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function GET() {
@@ -18,6 +18,7 @@ export async function GET() {
         dni_paciente,
         fecha_hora_turno,
         turno_modificado,
+        presencia_turno,
         legajo_medico,
         medico!inner(
           nombre,
@@ -29,7 +30,7 @@ export async function GET() {
           apellido
         ),
         especialidad(id_especialidad,descripcion)
-      `,
+      `
       )
       .order("fecha_hora_turno", { ascending: true });
 
@@ -43,7 +44,7 @@ export async function GET() {
       return NextResponse.json([]);
     }
 
-    const turnosFormateados = data.map((turno: any, index: number) => {
+    const turnosFormateados = data.map((turno: any) => {
       let nombrePaciente = "Sin nombre";
       let apellidoPaciente = "Sin apellido";
       let nombreMedico = "Sin nombre";
@@ -68,7 +69,8 @@ export async function GET() {
           apellidoMedico = turno.medico.apellido || "Sin apellido";
         }
       }
-      const resultado = {
+
+      return {
         cod_turno: turno.cod_turno,
         estado_turno: turno.estado_turno,
         dni_paciente: turno.dni_paciente,
@@ -78,17 +80,18 @@ export async function GET() {
         apellido_paciente: apellidoPaciente,
         nombre_medico: nombreMedico,
         apellido_medico: apellidoMedico,
-        especialidad: turno.especialidad, // <-- AGREGA ESTA LÍNEA
+        especialidad: turno.especialidad,
+        // 👇 ESTA es la única parte nueva importante
+        presencia_turno: turno.presencia_turno ?? false,
       };
-
-      return resultado;
     });
+
     return NextResponse.json(turnosFormateados);
   } catch (error) {
     console.error("Error en API turnos/todos:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

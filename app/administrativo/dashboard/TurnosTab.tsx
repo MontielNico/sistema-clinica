@@ -12,6 +12,7 @@ import {
 import FiltrosTurnos from "./FiltrosTurnos";
 import { useReasignarManual } from "./useReasignarManual";
 import { SkeletonTurnosTab } from "@/components/ui/skeletons/skeletonTurnos";
+import { User } from "lucide-react";
 
 interface Turno {
   cod_turno: number;
@@ -23,7 +24,9 @@ interface Turno {
   nombre_medico: string;
   apellido_medico: string;
   estado_turno: string;
+  presencia_turno: boolean | null; // 👈 importante
 }
+
 interface Filters {
   medico?: string;
   fechaInicio?: string;
@@ -34,8 +37,10 @@ async function getTurnosPacientes(): Promise<Turno[]> {
   const response = await fetch("/api/turnos/todos");
   if (!response.ok) throw new Error("Error al obtener turnos");
   const data: Turno[] = await response.json();
+
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
+
   return data.filter((t) => new Date(t.fecha_hora_turno) >= hoy);
 }
 
@@ -60,6 +65,7 @@ export const TurnosTab = () => {
       return next;
     });
   };
+
   const clearSelection = () => setSelected(new Set());
 
   const cargarTurnos = async () => {
@@ -67,12 +73,14 @@ export const TurnosTab = () => {
       setLoading(true);
       const turnosData = await getTurnosPacientes();
       setTurnos(turnosData);
-    } catch {
+    } catch (err) {
+      console.error("Error cargando turnos:", err);
       setTurnos([]);
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     cargarTurnos();
   }, []);
@@ -98,7 +106,6 @@ export const TurnosTab = () => {
       const turnoDate = new Date(turno.fecha_hora_turno);
       const turnoYMD = turnoDate.toISOString().slice(0, 10);
 
-      console.log();
       if (filters.fechaInicio) {
         const inicioYMD = new Date(filters.fechaInicio)
           .toISOString()
@@ -119,11 +126,9 @@ export const TurnosTab = () => {
     const resp: any = await reasignarNextDay(Array.from(selected));
     if (!resp) return;
 
-    // 1) Si viene mensaje agregado del backend (sin cortar el proceso), mostrarlo
     if (resp.agendaFailMessage) {
       setReError(resp.agendaFailMessage);
     } else {
-      // 2) Si no hay mensaje agregado, revisar fallidos individuales
       const fallidos = (resp.resultados ?? []).filter((r: any) => r.error);
       if (fallidos.length > 0) {
         const ids = fallidos.map((f: any) => `#${f.id}`).join(", ");
@@ -141,16 +146,56 @@ export const TurnosTab = () => {
       }
     }
 
-    // 3) Si hubo reasignaciones válidas, refrescar tabla
     if (resp.resultados && resp.resultados.some((r: any) => r.nuevo)) {
       clearSelection();
       await cargarTurnos();
     }
   };
 
-  if (loading) {
-    return <SkeletonTurnosTab />;
-  }
+  // ✅ Alternar presencia y actualizar color + base
+  const marcarPresencia = async (
+    cod_turno: number,
+    actual: boolean | null
+  ) => {
+    const nuevoValor = !Boolean(actual); // null/undefined -> false, se invierte a true
+
+    // Actualización optimista en el front
+    setTurnos((prev) =>
+      prev.map((t) =>
+        t.cod_turno === cod_turno
+          ? { ...t, presencia_turno: nuevoValor }
+          : t
+      )
+    );
+
+    try {
+      const res = await fetch("/api/turnos/presencia", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cod_turno, presencia: nuevoValor }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Error al actualizar presencia");
+      }
+
+      // Si quisieras, podrías leer el valor devuelto:
+      // const { data } = await res.json();
+      // y ajustar con data.presencia_turno, pero en este caso ya lo sabemos.
+    } catch (err) {
+      console.error("Error marcando presencia:", err);
+      // Revertir si hay error
+      setTurnos((prev) =>
+        prev.map((t) =>
+          t.cod_turno === cod_turno
+            ? { ...t, presencia_turno: actual }
+            : t
+        )
+      );
+    }
+  };
+
+  if (loading) return <SkeletonTurnosTab />;
 
   return (
     <TabsContent value="turnos" className="space-y-6">
@@ -177,7 +222,7 @@ export const TurnosTab = () => {
         </Button>
       </div>
 
-      {/* Banner de error con botón redondo “X” */}
+      {/* Banner de error */}
       {reError && (
         <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
           <div className="flex-1">{reError}</div>
@@ -185,7 +230,6 @@ export const TurnosTab = () => {
             onClick={() => setReError(null)}
             aria-label="Cerrar"
             className="shrink-0 inline-flex items-center justify-center h-6 w-6 rounded-full border border-red-300 text-red-700 hover:bg-red-100"
-            title="Cerrar"
           >
             ×
           </button>
@@ -209,6 +253,9 @@ export const TurnosTab = () => {
               <TableHead>Fecha</TableHead>
               <TableHead>Hora</TableHead>
               <TableHead>Consultar</TableHead>
+              <TableHead className="text-center">
+                Marcar Presencia
+              </TableHead>
               <TableHead className="text-center">Reasignar</TableHead>
               <TableHead className="text-center">Estado</TableHead>
             </TableRow>
@@ -220,8 +267,10 @@ export const TurnosTab = () => {
                 turno.fecha_hora_turno
               );
               const esReasignado =
-                (turno.estado_turno || "").toLowerCase() === "reasignado";
+                (turno.estado_turno || "").toLowerCase() ===
+                "reasignado";
               const estaSeleccionado = selected.has(turno.cod_turno);
+              const esPresente = Boolean(turno.presencia_turno);
 
               return (
                 <TableRow
@@ -251,18 +300,44 @@ export const TurnosTab = () => {
                   <TableCell>{fecha}</TableCell>
                   <TableCell>{hora}</TableCell>
 
+                  {/* Consultar */}
                   <TableCell className="whitespace-nowrap">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        (window.location.href = `/administrativo/turnos/${turno.cod_turno}`)
+                        (window.location.href =
+                          `/administrativo/turnos/${turno.cod_turno}`)
                       }
                     >
                       Ver Detalle
                     </Button>
                   </TableCell>
 
+                  {/* Marcar Presencia */}
+                  <TableCell className="text-center">
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          marcarPresencia(
+                            turno.cod_turno,
+                            turno.presencia_turno
+                          )
+                        }
+                        className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors duration-200 ${
+                          esPresente
+                            ? "bg-green-500 hover:bg-green-600 text-white"
+                            : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                        }`}
+                        aria-label="Marcar presencia"
+                      >
+                        <User className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </TableCell>
+
+                  {/* Reasignar */}
                   <TableCell className="text-center">
                     {!esReasignado && (
                       <input
@@ -276,21 +351,22 @@ export const TurnosTab = () => {
                     )}
                   </TableCell>
 
+                  {/* Estado */}
                   <TableCell className="text-center">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium border-2 ${
                         turno.estado_turno === "Pendiente de pago"
                           ? "bg-orange-50 text-orange-700 border-orange-300"
                           : turno.estado_turno === "Pagado" ||
-                              turno.estado_turno === "Confirmado"
-                            ? "bg-green-50 text-green-700 border-green-300"
-                            : turno.estado_turno === "Cancelado"
-                              ? "bg-red-50 text-red-700 border-red-300"
-                              : turno.estado_turno === "Pendiente"
-                                ? "bg-yellow-50 text-yellow-700 border-yellow-300"
-                                : turno.estado_turno === "Reasignado"
-                                  ? "bg-blue-50 text-blue-700 border-blue-300"
-                                  : "bg-gray-50 text-gray-700 border-gray-300"
+                            turno.estado_turno === "Confirmado"
+                          ? "bg-green-50 text-green-700 border-green-300"
+                          : turno.estado_turno === "Cancelado"
+                          ? "bg-red-50 text-red-700 border-red-300"
+                          : turno.estado_turno === "Pendiente"
+                          ? "bg-yellow-50 text-yellow-700 border-yellow-300"
+                          : turno.estado_turno === "Reasignado"
+                          ? "bg-blue-50 text-blue-700 border-blue-300"
+                          : "bg-gray-50 text-gray-700 border-gray-300"
                       }`}
                     >
                       {turno.estado_turno || "Sin estado"}
