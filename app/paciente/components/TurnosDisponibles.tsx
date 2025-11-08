@@ -1,13 +1,46 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, CheckCircle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import Agendar from "./Agendar";
 import NoMatches from "./NoMatches";
 import { useTurnosLibres } from "@/hooks/turnos/UseTurnosLibres";
-import { TurnoCard } from "./TurnoCard";
+import { useMedico } from "@/hooks/medico/useMedico";
+import { useEspecialidad } from "@/hooks/especialidades/useEspecialidad";
+import type { Especialidad } from "@/types/types";
+
+// es un componente
+function TurnoRow({ turno, onConfirm }: { turno: any; onConfirm: (t: any) => void }) {
+  const { medico } = useMedico(turno.legajo_medico);
+  const { especialidad } = useEspecialidad(turno.id_especialidad);
+
+  return (
+    <TableRow key={turno.id}>
+      <TableCell>{turno.fecha}</TableCell>
+      <TableCell>{turno.hora}</TableCell>
+      <TableCell>
+        {medico ? `${medico.nombre} ${medico.apellido}` : "Cargando..."}
+      </TableCell>
+      <TableCell>
+        {especialidad ? especialidad.descripcion : "Cargando..."}
+      </TableCell>
+      <TableCell className="text-right">
+        <Button size="sm" onClick={() => onConfirm(turno)} variant="default">
+          <CheckCircle className="h-4 w-4 mr-1" /> Agendar
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 interface TurnosDisponiblesProps {
   filtroEspecialidad: number;
@@ -97,34 +130,24 @@ export const TurnosDisponibles = ({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Turnos Disponibles</h3>
-
-      {turnosFormateados.slice(0, mostrarCantidad).map((turno) => (
-        <Card key={turno.id}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-             <div className="flex items-center gap-4">
-               <div className=" p-2 rounded-lg">
-                 <Clock className="h-4 w-4 text-secondary" />
-        <TurnoCard turno={ turno }></TurnoCard>
-               </div>
-               
-             </div>
-             <div className="flex gap-2">
-                 <Button
-                   size="sm"
-                   onClick={() => setTurnoAConfirmar(turno)}
-                   variant="default"
-                 >
-                   <CheckCircle className="h-4 w-4 mr-1" />
-                   Agendar
-                 </Button>
-               </div>
-             </div> 
-          
-          </CardContent>
-        </Card>
-      ))}
-
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Fecha</TableHead>
+              <TableHead>Hora</TableHead>
+              <TableHead>Médico</TableHead>
+              <TableHead>Especialidad</TableHead>
+              <TableHead className="text-right">Acción</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {turnosFormateados.slice(0, mostrarCantidad).map((turno) => (
+              <TurnoRow key={turno.id} turno={turno} onConfirm={setTurnoAConfirmar} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       {/*  Botón “Ver más” */}
       {turnosFormateados.length > mostrarCantidad && (
         <div className="flex justify-center">
