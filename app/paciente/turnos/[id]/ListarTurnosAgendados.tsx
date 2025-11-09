@@ -93,7 +93,7 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
   useEffect(() => {
     refreshTurnos();
   }, [dni_paciente]);
- 
+
   const [turnoAModificar, setTurnoAModificar] = useState<any>(null);
 
   if (turnoAModificar) {
@@ -106,108 +106,108 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
     );
   }
   return (
-      <div className="w-full max-w-[110vw] mx-auto px-4">
-        <Table className="w-full text-m">
-      <TableHeader>
-        <TableRow>
-          <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            Médico
-          </TableHead>
-          <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            Fecha
-          </TableHead>
-          <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            Hora
-          </TableHead>
-          <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            Consultorio
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {turnosAgendados.map((turno) => (
-           
-          <TableRow key={turno.cod_turno}>
-            <TableCell>
-              {turno.medico
-                ? `${turno.medico.nombre ?? ""} ${
-                    turno.medico.apellido ?? ""
-                  }`.trim()
-                : "-"}
-            </TableCell>
-
-            <TableCell>
-              {new Date(turno.fecha_hora_turno).toLocaleDateString("es-AR", {
-                timeZone: "America/Argentina/Buenos_Aires"
-              })}
-              </TableCell>
-            <TableCell>
-              {new Date(turno.fecha_hora_turno).toLocaleTimeString("es-AR", {
-                timeZone: "America/Argentina/Buenos_Aires",
-                hour: "2-digit",
-                minute: "2-digit"
-              })}
-            </TableCell>
-
-            <TableCell>
-              <div className="flex gap-2">
-                { turno.turno_modificado!=true && ( 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setTurnoAModificar(turno)} //lo comento porque rompe todo
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Modificar
-                </Button>)}
-
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => {
-                    setDialogOpen(true);
-                    setTurnoACancelar(turno.cod_turno);
-                  }}
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Cancelar
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    (window.location.href = `/administrativo/turnos/${turno.cod_turno}`)
-                  }
-                >
-                  Ver Detalle
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-        
-        {!isLoading && turnosAgendados.length === 0 && (
+    <div className="w-full max-w-[110vw] mx-auto px-4">
+      <Table className="w-full text-m">
+        <TableHeader>
           <TableRow>
-            <TableCell
-              colSpan={4}
-              className="text-center text-muted-foreground"
-            >
-              No tienes turnos agendados.
-            </TableCell>
+            <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+              Médico
+            </TableHead>
+            <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+              Fecha
+            </TableHead>
+            <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+              Hora
+            </TableHead>
+            <TableHead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+              Consultorio
+            </TableHead>
           </TableRow>
-        )}
-      </TableBody>
-    </Table>
-    <DialogCancelar
-          open={dialogOpen}
-          onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) setTurnoACancelar(null);
-          }}
-          loading={loadingCancelar}
-          onConfirm={() => turnoACancelar && cancelarTurno(turnoACancelar)}
-        />
+        </TableHeader>
+        <TableBody>
+          {turnosAgendados.map((turno) => (
+            <TableRow key={turno.cod_turno}>
+              <TableCell>
+                {turno.medico
+                  ? `${turno.medico.nombre ?? ""} ${
+                      turno.medico.apellido ?? ""
+                    }`.trim()
+                  : "-"}
+              </TableCell>
+
+              <TableCell>
+                {new Date(turno.fecha_hora_turno).toLocaleDateString("es-AR", {
+                  timeZone: "America/Argentina/Buenos_Aires",
+                })}
+              </TableCell>
+              <TableCell>
+                {new Date(turno.fecha_hora_turno).toLocaleTimeString("es-AR", {
+                  timeZone: "America/Argentina/Buenos_Aires",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </TableCell>
+
+              <TableCell>
+                <div className="flex gap-2">
+                  {turno.turno_modificado != true && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setTurnoAModificar(turno)} //lo comento porque rompe todo
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Modificar
+                    </Button>
+                  )}
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setDialogOpen(true);
+                      setTurnoACancelar(turno.cod_turno);
+                    }}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Cancelar
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      (window.location.href = `/administrativo/turnos/${turno.cod_turno}`)
+                    }
+                  >
+                    Ver Detalle
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+
+          {!isLoading && turnosAgendados.length === 0 && (
+            <TableRow>
+              <TableCell
+                colSpan={4}
+                className="text-center text-muted-foreground"
+              >
+                No tienes turnos agendados.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      <DialogCancelar
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setTurnoACancelar(null);
+        }}
+        loading={loadingCancelar}
+        onConfirm={() => turnoACancelar && cancelarTurno(turnoACancelar)}
+      />
     </div>
   );
 };
