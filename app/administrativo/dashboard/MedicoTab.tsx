@@ -89,45 +89,44 @@ export default function MedicoTab() {
   }, []);
 
   const allMedicos = useMemo(() => {
-    if (!search) return medicosConEspecialidades;
-    const q = search.toLowerCase();
-    return medicosConEspecialidades.filter((m: any) => {
-      const nombreMatch = (m.nombre || "").toLowerCase().includes(q);
-      const apellidoMatch = (m.apellido || "").toLowerCase().includes(q);
-      const nombreCompletoMatch = `${m.nombre || ""} ${m.apellido || ""}`.toLowerCase().includes(q);
-      const dniMatch = String(m.dni_medico || "").toLowerCase().includes(q);
-      const legajoMatch = String(m.legajo_medico || "").toLowerCase().includes(q);
-      const telefonoMatch = String(m.telefono || "").toLowerCase().includes(q);
-      const especialidadesMatch =
-        m.especialidades &&
-        m.especialidades.some((esp: any) =>
-          (esp.descripcion || "").toLowerCase().includes(q)
+    // --- Filtro de búsqueda ---
+    let filtrados = medicosConEspecialidades;
+    if (search) {
+      const q = search.toLowerCase();
+      filtrados = medicosConEspecialidades.filter((m: any) => {
+        const nombreMatch = (m.nombre || "").toLowerCase().includes(q);
+        const apellidoMatch = (m.apellido || "").toLowerCase().includes(q);
+        const nombreCompletoMatch = `${m.nombre || ""} ${m.apellido || ""}`.toLowerCase().includes(q);
+        const dniMatch = String(m.dni_medico || "").toLowerCase().includes(q);
+        const legajoMatch = String(m.legajo_medico || "").toLowerCase().includes(q);
+        const telefonoMatch = String(m.telefono || "").toLowerCase().includes(q);
+        const especialidadesMatch =
+          m.especialidades &&
+          m.especialidades.some((esp: any) =>
+            (esp.descripcion || "").toLowerCase().includes(q)
+          );
+  
+        return (
+          nombreMatch ||
+          apellidoMatch ||
+          nombreCompletoMatch ||
+          dniMatch ||
+          legajoMatch ||
+          telefonoMatch ||
+          especialidadesMatch
         );
-
-      return (
-        nombreMatch ||
-        apellidoMatch ||
-        nombreCompletoMatch ||
-        dniMatch ||
-        legajoMatch ||
-        telefonoMatch ||
-        especialidadesMatch
-      );
+      });
+    }
+  
+    // --- Orden por estado ---
+    return filtrados.sort((a: any, b: any) => {
+      if (a.estado?.toLowerCase() === "activo" && b.estado?.toLowerCase() !== "activo") return -1;
+      if (a.estado?.toLowerCase() !== "activo" && b.estado?.toLowerCase() === "activo") return 1;
+      
+      return a.nombre?.localeCompare(b.nombre || "");
     });
   }, [search, medicosConEspecialidades]);
-
-  if (loading) {
-    return (
-      <TabsContent value="medicos" className="space-y-6">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Cargando médicos...</p>
-          </div>
-        </div>
-      </TabsContent>
-    );
-  }
+  
 
   return (
     <TabsContent value="medicos" className="space-y-6">
@@ -200,15 +199,24 @@ export default function MedicoTab() {
           </TableHeader>
           <TableBody>
             {allMedicos.map((medico: any) => (
+              
               <TableRow key={medico.legajo_medico}>
-                <TableCell className="font-medium">
+                {medico.estado == "inactivo" ? (
+                  <TableCell className="font-medium text-gray-500">
+                    {medico.nombre} {medico.apellido}
+                  </TableCell>
+                ):(<TableCell className="font-medium">
                   {medico.nombre} {medico.apellido}
-                </TableCell>
+                </TableCell>)} 
                 <TableCell>
-                  <div className="flex flex-wrap gap-1">
+                  <div className={`flex flex-wrap gap-1`}>
                     {medico.especialidades && medico.especialidades.length > 0 ? (
                       medico.especialidades.map((especialidad: any, index: number) => (
-                        <Badge key={index} variant="default" className="text-xs">
+                        <Badge key={index} variant="default" className={`text-xs ${
+                          medico.estado === "inactivo"
+                            ? "bg-white-300 text-gray-600 border border-gray-150 cursor-not-allowed"
+                            : ""
+                        }`}>
                           {especialidad.descripcion || "Sin nombre"}
                         </Badge>
                       ))
@@ -218,7 +226,7 @@ export default function MedicoTab() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={medico.estado === "activo" ? "secondary" : "outline"}>
+                  <Badge variant={medico.estado === "activo" ? "secondary" : "disabled"}>
                     {medico.estado || "activo"}
                   </Badge>
                 </TableCell>
@@ -229,6 +237,7 @@ export default function MedicoTab() {
                     onClick={() =>
                       (window.location.href = `../administrativo/medicos/${medico.legajo_medico}/TurnosMedico`)
                     }
+                    disabled={medico.estado == "inactivo"}
                   >
                     Ver Turnos
                   </Button>
@@ -241,6 +250,7 @@ export default function MedicoTab() {
                       onClick={() =>
                         (window.location.href = `/administrativo/medicos/${medico.legajo_medico}/agenda/modificarAgenda`)
                       }
+                      disabled={medico.estado == "inactivo"}
                     >
                       Modificar Agenda
                     </Button>
@@ -251,6 +261,7 @@ export default function MedicoTab() {
                       onClick={() =>
                         (window.location.href = `/administrativo/medicos/${medico.legajo_medico}/agenda/nuevaAgenda`)
                       }
+                      disabled={medico.estado == "inactivo"}
                     >
                       Registrar Agenda
                     </Button>
@@ -265,6 +276,7 @@ export default function MedicoTab() {
                       onClick={() =>
                         (window.location.href = `/administrativo/medicos/${medico.legajo_medico}/datos/modificarDatos`)
                       }
+                      disabled={medico.estado == "inactivo"}
                     >
                       Modificar Datos
                     </Button>

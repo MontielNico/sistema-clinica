@@ -8,7 +8,7 @@ const supabase = createClient(
 );
 
 export async function PUT(req: NextRequest) {
- // leer el cuerpo y aceptar varios nombres de campo
+  // leer el cuerpo y aceptar varios nombres de campo
   let body: any = null;
   try {
     body = await req.json();
