@@ -17,33 +17,52 @@ interface Turno {
 }
 export function generarPDFTablaTurnos(
   turnos: Turno[],
-  nombreArchivo = "reporte.pdf"
+  nombreArchivo = "reporte_medicos.pdf"
 ) {
+  const turnosPorMedico = turnos.reduce(
+    (acc, turno) => {
+      const medicoKey = `${turno.nombre_medico}_${turno.apellido_medico}`;
+      if (!acc[medicoKey]) {
+        acc[medicoKey] = [];
+      }
+      acc[medicoKey].push(turno);
+      return acc;
+    },
+    {} as Record<string, Turno[]>
+  );
+
   const doc = new jsPDF();
-  autoTable(doc, {
-    head: [
-      [
-        "Código",
-        "Paciente",
-        "Médico",
-        "Especialidad",
-        "Fecha",
-        "Hora",
-        "Estado",
-      ],
-    ],
-    body: turnos.map((t) => [
-      t.cod_turno,
-      `${t.nombre_paciente} ${t.apellido_paciente}`,
-      `${t.nombre_medico} ${t.apellido_medico}`,
-      t.especialidad?.descripcion || "",
-      new Date(t.fecha_hora_turno).toLocaleDateString("es-ES"),
-      new Date(t.fecha_hora_turno).toLocaleTimeString("es-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      t.estado_turno,
-    ]),
+  let isFirstPage = true;
+
+  Object.entries(turnosPorMedico).forEach(([medicoKey, turnosMedico]) => {
+    const [nombre, apellido] = medicoKey.split("_");
+    const especialidad = turnosMedico[0]?.especialidad?.descripcion || "";
+
+    if (!isFirstPage) {
+      doc.addPage();
+    }
+    isFirstPage = false;
+
+    doc.setFontSize(16);
+    doc.text(`Turnos - Dr. ${nombre} ${apellido} - ${especialidad}`, 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Total de turnos: ${turnosMedico.length}`, 20, 30);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [["Código", "Paciente", "Fecha", "Hora", "Estado"]],
+      body: turnosMedico.map((t) => [
+        t.cod_turno,
+        `${t.nombre_paciente} ${t.apellido_paciente}`,
+        new Date(t.fecha_hora_turno).toLocaleDateString("es-ES"),
+        new Date(t.fecha_hora_turno).toLocaleTimeString("es-ES", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        t.estado_turno,
+      ]),
+    });
   });
+
   doc.save(nombreArchivo);
 }
