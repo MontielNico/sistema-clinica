@@ -99,7 +99,10 @@ export default function PacienteTab() {
                   <Button
                     variant={paciente.ausencias > 0 ? "default" : "outline"}
                     size="sm"
-                    disabled={!paciente.ausencias || paciente.ausencias === 0}
+                    disabled={
+                      !paciente.cantidad_ausencias ||
+                      paciente.cantidad_ausencias === 0
+                    }
                     onClick={() =>
                       (window.location.href = `/administrativo/paciente/${paciente.id}/historial`)
                     }
