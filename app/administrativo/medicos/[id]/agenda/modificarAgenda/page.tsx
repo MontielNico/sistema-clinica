@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { AgendaModificada } from "@/components/ui/agendaModificada";
 import SkeletonAgendaConfig from "@/components/ui/skeletons/skeletonAgenda";
 
-
 export default function EditarAgendaForm({
   params,
 }: {
@@ -27,6 +26,11 @@ export default function EditarAgendaForm({
   const [turnosReasignados, setTurnosReasignados] = useState<number>(0);
   const [guardando, setGuardando] = useState(false);
   const [finMin, setFinMin] = useState("");
+
+  ///////////////////////////////
+  const [agendaOriginal, setAgendaOriginal] = useState<any>(null);
+  ///////////////////////////////
+
   const fechaHoy = new Date().toISOString().split("T")[0];
 
   const calcularFinMin = (fechaStr: string) => {
@@ -35,33 +39,95 @@ export default function EditarAgendaForm({
     fecha.setDate(fecha.getDate() + 7);
     return fecha.toISOString().split("T")[0];
   };
-  
+
   const handleInicioChange = (e: any) => {
     const fecha = e.target.value;
     setFechaInicio(fecha);
-    setFinMin(calcularFinMin(fecha)); // recalcular min de fin
+    setFinMin(calcularFinMin(fecha));
   };
 
   function validarDias(diasAtencion: any[]) {
     for (let i = 0; i < diasAtencion.length; i++) {
       const dia = diasAtencion[i];
       if (dia.activo) {
-        // validar que haya hora de inicio y fin
         if (!dia.hora_inicio || !dia.hora_fin) {
           return `Faltan horarios en ${diasSemana[i]}`;
         }
-  
-        // validar que inicio < fin
+
         if (dia.hora_inicio >= dia.hora_fin) {
           return `El horario de ${diasSemana[i]} no es válido (hora de inicio debe ser menor a la de fin).`;
         }
       }
     }
-    return null; // todo OK
+    return null;
   }
 
-  
-  async function handleGuardar(e: React.FormEvent){
+  ///////////////////////////////
+  const verificarTurnosLiberados = (original: any, nuevo: any): boolean => {
+    if (!original || !nuevo) return false;
+
+    const diasOriginales = original.dia_semana || [];
+    const diasNuevos = nuevo.dias_semana || [];
+
+    if (diasNuevos.length > diasOriginales.length) {
+      return true;
+    }
+
+    for (const diaNuevo of diasNuevos) {
+      const diaOriginal = diasOriginales.find(
+        (d: any) => d.dia_semana === diaNuevo.dia_semana
+      );
+
+      if (!diaOriginal) {
+        return true;
+      }
+      console.log("Hora de inicio del dia nuevo", diaNuevo.hora_inicio);
+      console.log("Hora inicio dia original", diaOriginal.hora_inicio);
+      console.log("Hora de fin del dia nuevo", diaNuevo.hora_fin);
+      console.log("Hora fin dia original", diaOriginal.hora_fin);
+
+      if (
+        diaNuevo.hora_inicio < diaOriginal.hora_inicio ||
+        diaNuevo.hora_fin > diaOriginal.hora_fin
+      ) {
+        return true;
+      }
+    }
+
+    const fechaFinOriginal = new Date(original.fechafinvigencia);
+    const fechaFinNueva = new Date(nuevo.fechafinvigencia);
+
+    if (fechaFinNueva > fechaFinOriginal) {
+      return true;
+    }
+
+    return false;
+  };
+  ///////////////////////////////
+
+  const notificarTurnosLiberados = async () => {
+    try {
+      if (!medico?.medico_especialidad[0].especialidad.descripcion) return;
+
+      await fetch("/api/lista-espera/notificar-creacion-agenda", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          legajo_medico,
+          nombre: medico.nombre,
+          apellido: medico.apellido,
+          id_especialidad:
+            medico?.medico_especialidad[0].especialidad.id_especialidad,
+          descripcion: medico?.medico_especialidad[0].especialidad.descripcion,
+        }),
+      });
+    } catch (error) {
+      console.error("Error notificando turnos liberados:", error);
+    }
+  };
+  ///////////////////////////////
+
+  async function handleGuardar(e: React.FormEvent) {
     e.preventDefault();
     setGuardando(true);
 
@@ -69,22 +135,24 @@ export default function EditarAgendaForm({
     if (errorHorario) {
       setMensaje(errorHorario);
       setGuardando(false);
-      return; // detenemos el guardado
+      return;
     }
 
     const diasSeleccionados = diasAtencion
-    .map((d, index)=>{
-      if(!d.activo) return null;
-      return{
-        dia_semana: index + 1,
-        hora_inicio: d.hora_inicio + ":00",
-        hora_fin: d.hora_fin + ":00"
-      };
-    })
-    .filter(Boolean);
+      .map((d, index) => {
+        if (!d.activo) return null;
+        return {
+          dia_semana: index + 1,
+          hora_inicio: d.hora_inicio + ":00",
+          hora_fin: d.hora_fin + ":00",
+        };
+      })
+      .filter(Boolean);
 
     const minutos = duracionTurno;
-    const horas = Math.floor(minutos/60).toString().padStart(2,"0");
+    const horas = Math.floor(minutos / 60)
+      .toString()
+      .padStart(2, "0");
     const mins = (minutos % 60).toString().padStart(2, "0");
 
     const body = {
@@ -94,31 +162,33 @@ export default function EditarAgendaForm({
       dias_semana: diasSeleccionados,
     };
 
-    console.log("Body a enviar:", JSON.stringify(body, null, 2));
+    ///////////////////////////////
+    const seLiberaronTurnos = verificarTurnosLiberados(agendaOriginal, body);
+    ///////////////////////////////
 
-
-    try{
-      const res = await fetch(`/api/agenda?legajo_medico=${legajo_medico}`,{
+    try {
+      const res = await fetch(`/api/agenda?legajo_medico=${legajo_medico}`, {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
       const data = await res.json();
 
-      if(!res.ok) throw new Error(data.error || "Error al acutalizar agenda");
-
-      console.log(`${data.mensaje}\nTurnos afectados: ${data.turnos_afectados}\nTurnos reasignados: ${data.turnos_reasignados}`);
+      if (!res.ok) throw new Error(data.error || "Error al acutalizar agenda");
+      if (seLiberaronTurnos) {
+        await notificarTurnosLiberados();
+      }
+      ///////////////////////////////
 
       setTurnosReasignados(data.turnos_reasignados);
       setExito(true);
-
-    } catch (error: any){
+    } catch (error: any) {
       alert("error:" + error.message);
-    } finally{
+    } finally {
       setGuardando(false);
     }
-  } 
+  }
 
   const diasSemana = [
     "Lunes",
@@ -146,7 +216,10 @@ export default function EditarAgendaForm({
         setMedico(data);
 
         if (data.agenda) {
-          // Configurar valores iniciales
+          ///////////////////////////////
+          setAgendaOriginal(data.agenda);
+          ///////////////////////////////
+
           setDuracionTurno(
             parseInt(data.agenda.duracionturno.split(":")[1]) || 30
           );
@@ -155,8 +228,6 @@ export default function EditarAgendaForm({
           setFechaInicio(inicio);
           setFechaFin(fin);
           setFinMin(calcularFinMin(inicio));
-
-          console.log(data.agenda.dia_semana);
 
           const nuevosDias = diasSemana.map((_, index) => {
             const diaEncontrado = data.agenda.dia_semana?.find(
@@ -185,7 +256,7 @@ export default function EditarAgendaForm({
     fetchMedico();
   }, [legajo_medico]);
 
-  if (loading) return <SkeletonAgendaConfig/>;
+  if (loading) return <SkeletonAgendaConfig />;
 
   if (exito)
     return (
@@ -250,7 +321,7 @@ export default function EditarAgendaForm({
                 <Input
                   type="date"
                   value={fechaFin}
-                  onChange={(e)=>setFechaFin(e.target.value)}
+                  onChange={(e) => setFechaFin(e.target.value)}
                   min={finMin}
                 />
               </div>
@@ -318,17 +389,17 @@ export default function EditarAgendaForm({
           </Card>
 
           <div className="flex justify-center">
-          <Button
-            type="submit"
-            disabled={guardando}
-            className={`transition-all ${
-            guardando
-              ? "cursor-not-allowed opacity-70"
-              : "hover:scale-[1.03] hover:brightness-110"
-            }`}
-          >
-          {guardando ? "Guardando..." : "Guardar"}
-          </Button>
+            <Button
+              type="submit"
+              disabled={guardando}
+              className={`transition-all ${
+                guardando
+                  ? "cursor-not-allowed opacity-70"
+                  : "hover:scale-[1.03] hover:brightness-110"
+              }`}
+            >
+              {guardando ? "Guardando..." : "Guardar"}
+            </Button>
           </div>
           {mensaje && (
             <p className="text-center font-medium text-gray-700">{mensaje}</p>
