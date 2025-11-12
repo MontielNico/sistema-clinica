@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
             legajo_medico,
             nombre,
             apellido,
-            especialidad: id_especialidad(descripcion),
+        
             agenda: id_agenda(
             id_agenda,
             fechainiciovigencia,
