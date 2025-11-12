@@ -104,16 +104,15 @@ export const ReporteTurnosPorFecha = ({
         }
       }
 
-      const turnoDate = new Date(turno.fecha_hora_turno);
-      const turnoYMD = turnoDate.toISOString().slice(0, 10);
-
       if (fechaInicio && fechaInicio !== "") {
-        const inicioYMD = new Date(fechaInicio).toISOString().slice(0, 10);
-        if (turnoYMD < inicioYMD) return false;
+        const turnoDate = new Date(turno.fecha_hora_turno);
+        const inicioDate = new Date(fechaInicio + "T00:00:00");
+        if (turnoDate < inicioDate) return false;
       }
       if (fechaFin && fechaFin !== "") {
-        const finYMD = new Date(fechaFin).toISOString().slice(0, 10);
-        if (turnoYMD > finYMD) return false;
+        const turnoDate = new Date(turno.fecha_hora_turno);
+        const finDate = new Date(fechaFin + "T23:59:59");
+        if (turnoDate > finDate) return false;
       }
 
       return true;
