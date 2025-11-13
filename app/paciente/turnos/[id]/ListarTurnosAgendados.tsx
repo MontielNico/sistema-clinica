@@ -41,7 +41,6 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
       body: JSON.stringify({ cod_turno }),
     });
     setLoadingCancelar(true);
-    console.log("eliminar el turno con el codigo", cod_turno);
     try {
       const response = await fetch(`/api/turnos/turnosPaciente`, {
         method: "DELETE",
@@ -69,7 +68,12 @@ export const ListarTurnosAgendados = ({ dni_paciente }: any) => {
         }
       );
       if (!response.ok) throw new Error("Error al obtener turnos");
-      const data = await response.json();
+      const turnos = await response.json();
+      const data = Array.isArray(turnos)
+        ? turnos.filter((turno) => turno.estado_turno === "Reservado")
+        : [];
+      console.log(data);
+      //aca filtrar solo los turnos con estado 'Reservado'
       return Array.isArray(data)
         ? data.sort(
             (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
