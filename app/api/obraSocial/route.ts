@@ -176,15 +176,19 @@ export async function PUT(request: NextRequest) {
       updateData.estado = estado;
 
       if (estado === "Deshabilitado") {
+        const hoy = new Date().toISOString().split("T")[0]; // fecha actual en formato YYYY-MM-DD
+        
         const { data: turnosAfectados } = await supabaseAdmin
           .from("turno")
           .select("cod_turno, fecha_hora_turno, id_especialidad")
-          .eq("id_obra", Number(id));
+          .eq("id_obra", Number(id))
+          .gt("fecha_hora_turno", hoy); // solo turnos futuros
 
         await supabaseAdmin
           .from("turno")
           .update({ estado_turno: "Pendiente de pago", turno_pagado: false })
-          .eq("id_obra", Number(id));
+          .eq("id_obra", Number(id))
+          .gt("fecha_hora_turno", hoy); // solo turnos futuros
 
         if (turnosAfectados?.length) {
           const descNotif =

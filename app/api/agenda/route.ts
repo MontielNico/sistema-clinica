@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
             `)
             .eq("legajo_medico", legajo_medico)
             .single();
-
+        console.log(medico);
         if (errorMedico) throw errorMedico;
 
         if (!medico.agenda) {
@@ -214,6 +214,39 @@ export async function PUT(request: NextRequest) {
         console.error("Error en put /api/agenda:", error);
         return NextResponse.json(
             { error: "Error al modificar la agenda", detalle: error.message },
+            { status: 500 },
+        );
+    }
+}
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const body = await request.json();
+
+        const {
+            legajo_medico,
+        } = body;
+
+        if (!legajo_medico) {
+            return NextResponse.json(
+                { error: "Datos incompletos o inválidos." },
+                { status: 400 },
+            );
+        }
+        const { data: medico, error: errorMedico } = await supabase
+            .from("agenda")
+            .delete()
+            .eq("legajo_medico", legajo_medico)
+            .single();
+        if (errorMedico) throw errorMedico;
+
+        return NextResponse.json(
+            { message: "Agenda eliminada con éxito", medico },
+            { status: 201 },
+        );
+    } catch (error: any) {
+        return NextResponse.json(
+            { error: "error al eliminar la agenda", detalle: error.message },
             { status: 500 },
         );
     }

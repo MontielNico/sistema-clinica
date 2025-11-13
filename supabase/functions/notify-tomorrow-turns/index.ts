@@ -62,6 +62,7 @@ serve(async (req) => {
       .select(`
     cod_turno,
     fecha_hora_turno,
+    estado_turno,
     medico(nombre, apellido),
     profiles(nombre, apellido, email),
     especialidad(descripcion)
@@ -73,7 +74,7 @@ serve(async (req) => {
       .lt(
         "fecha_hora_turno",
         fin.toISOString(),
-      ) as {
+      ).eq("estado_turno", "Reservado") as {
         data: Turno[] | null;
         error: any;
       };

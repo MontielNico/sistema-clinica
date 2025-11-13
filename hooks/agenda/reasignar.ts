@@ -55,9 +55,6 @@ export async function reasignarTurnos(turnosAfectados: any[], agenda: any) {
 
   //REASIGNA LOS TURNOS A LOS HORARIOS GENERADOS
   for (const turno of turnosAfectados) {
-    //---- ----
-
-    //---- ----
     const horario = disponibles.shift();
     if (horario) {
       await supabase.from("turno").insert({

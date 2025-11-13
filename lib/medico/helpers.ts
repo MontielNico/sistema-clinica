@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { notificarCambioEstadoTurnoPorConvenio } from "@/hooks/convenio/notificar-pendiente-pago-convenio";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -87,25 +88,88 @@ export async function syncConveniosMedico(
         .in("id_obra", eliminar);
     }
 
-    //  actualizar turnos a "Pendiente de pago"
+    //  actualizar turnos futuros a "Pendiente de pago" y notificar
     if (eliminar.length > 0) {
+      const hoy = new Date().toISOString().split("T")[0]; // fecha actual en formato YYYY-MM-DD
+
       for (const eliminado of eliminar) {
-        const { error: errorTurnos } = await supabase
-          .from("turnos")
-          .update({ estado: "Pendiente de pago" })
+        // obtener turnos futuros afectados por el convenio eliminado
+        const { data: turnosFuturos, error: errorFetch } = await supabase
+          .from("turno")
+          .select("cod_turno, fecha_hora_turno, dni_paciente, legajo_medico, id_obra")
           .eq("legajo_medico", legajo_medico)
           .eq("id_obra", eliminado)
-          .neq("estado", "Cancelado"); // opcional: no afectar cancelados
+          .neq("estado_turno", "Cancelado")
+          .gt("fecha_hora_turno", hoy); // solo turnos futuros (fecha > hoy)
 
-        if (errorTurnos) {
+        if (errorFetch) {
           console.warn(
-            ` Error actualizando turnos del médico de ID${legajo_medico} para obra de ID ${eliminado}:`,
-            errorTurnos.message
+            ` Error obteniendo turnos futuros del médico ID ${legajo_medico} para obra ID ${eliminado}:`,
+            errorFetch.message
           );
-        } else {
-          console.log(
-            ` Turnos del médico de ID ${legajo_medico} con obra de ID ${eliminado} marcados como "Pendiente de pago".`
-          );
+          continue;
+        }
+
+        if (turnosFuturos && turnosFuturos.length > 0) {
+          // actualizar todos los turnos futuros a "Pendiente de pago"
+          const { error: errorTurnos } = await supabase
+            .from("turno")
+            .update({ estado_turno: "Pendiente de pago", turno_pagado: false })
+            .eq("legajo_medico", legajo_medico)
+            .eq("id_obra", eliminado)
+            .neq("estado_turno", "Cancelado")
+            .gt("fecha_hora_turno", hoy);
+
+          if (errorTurnos) {
+            console.warn(
+              ` Error actualizando turnos futuros del médico ID ${legajo_medico} para obra ID ${eliminado}:`,
+              errorTurnos.message
+            );
+          } else {
+            console.log(
+              ` Turnos futuros del médico ID ${legajo_medico} con obra ID ${eliminado} marcados como "Pendiente de pago".`
+            );
+
+            // enviar notificaciones a los turnos futuros afectados
+            for (const turno of turnosFuturos) {
+              try {
+                // obtener datos del paciente y médico para la notificación
+                const { data: paciente } = await supabase
+                  .from("profiles")
+                  .select("nombre, apellido, email")
+                  .eq("dni_paciente", turno.dni_paciente)
+                  .single();
+
+                const { data: medico } = await supabase
+                  .from("medico")
+                  .select("nombre, apellido")
+                  .eq("legajo_medico", turno.legajo_medico)
+                  .single();
+
+                const { data: obraSocial } = await supabase
+                  .from("obra_social")
+                  .select("descripcion")
+                  .eq("id_obra", turno.id_obra)
+                  .single();
+
+                await notificarCambioEstadoTurnoPorConvenio({
+                  idTurno: String(turno.cod_turno),
+                  descripcion: obraSocial?.descripcion || "Obra social",
+                  nuevoEstado: "Pendiente de pago",
+                  fechaHoraTurno: turno.fecha_hora_turno,
+                  especialidad: "Especialidad", // se obtiene dentro de la función si es necesario
+                });
+                console.log(
+                  ` Notificación enviada para turno ID ${turno.cod_turno} - estado: Pendiente de pago`
+                );
+              } catch (notifyError: any) {
+                console.warn(
+                  ` Error enviando notificación para turno ID ${turno.id_turno}:`,
+                  notifyError.message
+                );
+              }
+            }
+          }
         }
       }
     }
