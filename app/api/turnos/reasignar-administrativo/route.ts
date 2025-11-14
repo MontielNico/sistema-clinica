@@ -712,10 +712,11 @@ export async function POST(req: NextRequest) {
       windows.forEach((w) => {
         candidatos.push(...slotsBetween(w.h1, w.h2, w.slot));
       });
-
+      console.log("cantidatos antes de filtrar:", candidatos);
       const taken = await getOcupados(legajo, targetDay!);
+      console.log("ocupados", taken);
       candidatos = candidatos.filter((h) => !taken.has(h));
-
+      console.log("candidatos despues de filtrar:", candidatos);
       let idx = 0;
       for (const t of lista) {
         if (idx + 1 >= candidatos.length) {
@@ -746,17 +747,20 @@ export async function POST(req: NextRequest) {
           dni_paciente: t.profiles.dni_paciente,
           id_especialidad: t.id_especialidad,
           id_obra: t.id_obra,
-          fecha_hora_turno: nuevaFecha, 
+          fecha_hora_turno: nuevaFecha,
           estado_turno: estadoOriginal,
           turno_pagado: t.turno_pagado ?? false,
         };
-        console.log(estadoOriginal,nuevoTurno)
+        console.log(estadoOriginal, nuevoTurno);
+
         await sendAvisoReasignacion({
           nombre_paciente: t.profiles.nombre,
           apellido_paciente: t.profiles.apellido,
           nombre_medico: t.medico.nombre,
           especialidad: t.especialidad.descripcion,
-          fecha_turno_nuevo: new Date(nuevaFecha),
+          fecha_turno_nuevo: new Date(
+            new Date(nuevaFecha).getTime() + 3 * 60 * 60 * 1000,
+          ),
           email_paciente: t.profiles.email,
         });
 
@@ -773,7 +777,7 @@ export async function POST(req: NextRequest) {
           taken.add(hhmmSlot);
         }
 
-        idx=idx+2;
+        idx = idx + 2;
       }
     }
 

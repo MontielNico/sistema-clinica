@@ -47,13 +47,13 @@ export function AddObraForm({
       return;
     }
 
-    const fechaSeleccionada = new Date(fechaVigencia);
+    const [año, mes, dia] = fechaVigencia.split("-").map(Number);
+    const fechaSeleccionada = new Date(año, mes - 1, dia);
+
     const hoy = new Date();
-
-    // Resetear horas para comparar solo fechas
-    fechaSeleccionada.setHours(0, 0, 0, 0);
     hoy.setHours(0, 0, 0, 0);
-
+    console.log("fecha seleccionada", fechaSeleccionada);
+    console.log("fecha hoy", hoy);
     if (fechaSeleccionada < hoy) {
       setError("La fecha de vigencia no puede ser anterior a hoy");
       setIsLoading(false);
