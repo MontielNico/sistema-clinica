@@ -66,7 +66,7 @@ const FiltrosBusqueda = () => {
         if (!response.ok) {
           throw new Error("Error al obtener especialidades");
         }
-        const EspecialidadesData: any[] = await response.json();
+        const EspecialidadesData: any = await response.json();
         console.log(EspecialidadesData);
         setEspecialidades(EspecialidadesData.data);
       } catch (error) {
@@ -165,8 +165,8 @@ const FiltrosBusqueda = () => {
 
       {mostrarResultados && (
         <TurnosDisponibles
-          filtroEspecialidad={filtroEspecialidad}
-          filtroMedico={filtroMedico}
+          filtroEspecialidad={Number(filtroEspecialidad)}
+          filtroMedico={Number(filtroMedico)}
         ></TurnosDisponibles>
       )}
     </>
