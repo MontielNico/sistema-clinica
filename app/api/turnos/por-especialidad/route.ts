@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       .from("turno")
       .select("*")
       .eq("id_especialidad", Number(id_especialidad))
-      .not("dni_paciente", "is", null)
+      .in("estado_turno", ["Reasignado", "Pendiente de pago", "Reservado"])
       .gt("fecha_hora_turno", nowIso)
       .order("fecha_hora_turno", { ascending: true });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

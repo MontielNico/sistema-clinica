@@ -7,18 +7,18 @@ const supabase = createClient(
 );
 //devuelve los turnos de un medico
 export async function GET(request: NextRequest) {
+  
   try {
     const { searchParams } = new URL(request.url);
     const legajo = Number(searchParams.get("legajo_medico"));
     if (!legajo) return NextResponse.json({ error: "Falta legajo" }, { status: 400 });
-console.log("👨‍⚕️ legajo_medico:", legajo);
 
     const nowIso = new Date().toISOString();
     const { data, error } = await supabase
       .from("turno")
       .select("*")
       .eq("legajo_medico", legajo)
-      .not("dni_paciente", "is", null)
+      .in("estado_turno", ["Reservado", "Pendiente de pago", "Reasignado"])
       .gt("fecha_hora_turno", nowIso)
       .order("fecha_hora_turno", { ascending: true });
 
