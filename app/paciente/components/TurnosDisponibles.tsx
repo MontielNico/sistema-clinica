@@ -78,7 +78,7 @@ export const TurnosDisponibles = ({
     filtroEspecialidad,
     filtroMedico
   );
-
+console.log("Turnos libres:", turnosDisponibles);
   //Mostrar “Ver más”
   const mostrarMas = () => setMostrarCantidad((prev) => prev + 15);
 

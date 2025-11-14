@@ -39,17 +39,17 @@ export const ModificarTurno = ({
 
   //  obtiene los turnos libres del mismo médico y especialidad (hook devuelve { libres, loading, error })
   const {
-    libres: turnosLibres,
+    libres,
     loading,
     error,
   } = useTurnosLibres(
-    turnoAModificar?.id_especialidad ?? 0,
-    turnoAModificar?.legajo_medico ?? 0
+    Number(turnoAModificar?.id_especialidad) ?? 0,
+    Number(turnoAModificar?.legajo_medico) ?? 0
   );
-
-  const turnos: any[] = Array.isArray(turnosLibres)
-    ? turnosLibres
-    : (turnosLibres ?? []);
+console.log("Turnos a modificars:", turnoAModificar,libres);
+  const turnos: any[] = Array.isArray(libres)
+    ? libres
+    : (libres ?? []);
 
   // Por si algún item no trae `iso` y viene con otra key (ej. fecha_hora_turno)
   const getISO = (t: any) =>
@@ -60,12 +60,36 @@ export const ModificarTurno = ({
   horaMinima.setHours(horaMinima.getHours() + 24);
 
   // Formateo
-  const turnosFormateados = turnos
-    .map((t: any) => {
-      const iso = getISO(t);
-      if (!iso) return null; // saltar items raros
-      const fecha = new Date(iso);
-      if (fecha < horaMinima) return null; // filtrar turnos antes de 24 horas
+  // const turnosFormateados = turnos
+  //   .map((t: any) => {
+  //     const iso = getISO(t);
+  //     if (!iso) return null; // saltar items raros
+  //     const fecha = new Date(iso);
+  //     if (fecha < horaMinima) return null; // filtrar turnos antes de 24 horas
+  //     const fechaStr = fecha.toLocaleDateString("es-AR", {
+  //       weekday: "long",
+  //       day: "2-digit",
+  //       month: "2-digit",
+  //     });
+  //     const horaStr = fecha.toLocaleTimeString("es-AR", {
+  //       hour: "2-digit",
+  //       minute: "2-digit",
+  //     });
+
+  //     return {
+  //       id: iso,
+  //       fecha: fechaStr,
+  //       hora: horaStr,
+  //       legajo_medico: t.legajo_medico ?? turnoAModificar?.legajo_medico,
+  //       id_especialidad: t.id_especialidad ?? turnoAModificar?.id_especialidad,
+  //     };
+  //   })
+  //   .filter(Boolean) // quitar nulls
+  //   .sort((a: any, b: any) => (a.id < b.id ? -1 : 1)); // opcional: ordenar
+ const turnosFormateados = (turnos ?? [])
+    .filter((t) => new Date(t.iso) >= horaMinima)
+    .map((t) => {
+      const fecha = new Date(t.iso);
       const fechaStr = fecha.toLocaleDateString("es-AR", {
         weekday: "long",
         day: "2-digit",
@@ -75,18 +99,14 @@ export const ModificarTurno = ({
         hour: "2-digit",
         minute: "2-digit",
       });
-
       return {
-        id: iso,
+        id: t.iso,
         fecha: fechaStr,
         hora: horaStr,
         legajo_medico: t.legajo_medico ?? turnoAModificar?.legajo_medico,
-        id_especialidad: t.id_especialidad ?? turnoAModificar?.id_especialidad,
+         id_especialidad: t.id_especialidad ?? turnoAModificar?.id_especialidad,
       };
-    })
-    .filter(Boolean) // quitar nulls
-    .sort((a: any, b: any) => (a.id < b.id ? -1 : 1)); // opcional: ordenar
-
+    });
   // Al seleccionar nuevo turno
   const seleccionarNuevoTurno = (turnoAModificar: any, nuevoTurno: any) => {
     setTurnoViejo({

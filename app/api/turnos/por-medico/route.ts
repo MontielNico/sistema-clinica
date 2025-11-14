@@ -17,11 +17,10 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("turno")
       .select("*")
-      .eq("legajo_medico", legajo)
+      .eq("legajo_medico", Number(legajo))
       .in("estado_turno", ["Reservado", "Pendiente de pago", "Reasignado"])
       .gt("fecha_hora_turno", nowIso)
       .order("fecha_hora_turno", { ascending: true });
-
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data || []);
   } catch (err: any) {
