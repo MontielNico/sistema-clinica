@@ -82,8 +82,8 @@ export async function sendAvisoReasignacion({
       },
       body: JSON.stringify({
         sender: {
-          name: "Clínica System",
-          email: "devsistematurnos@gmail.com",
+          name: "Turns Med Manager",
+          email: "softwaredesarrollo8@gmail.com",
         },
         to: [{ email: email_paciente }],
         subject: `Turno reasignado`,

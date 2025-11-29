@@ -97,7 +97,7 @@ export async function sendTurnoPendientePagoNotification({
         Accept: "application/json",
       },
       body: JSON.stringify({
-        sender: { name: "Clínica System", email: "devsistematurnos@gmail.com" },
+        sender: { name: "Clínica System", email: "softwaredesarrollo8@gmail.com" },
         to: [{ email: pacienteEmail, name: pacienteNombre }],
         subject: `⏳ Turno Pendiente de Pago - ${fechaTurno}`,
         htmlContent,

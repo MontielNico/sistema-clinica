@@ -78,7 +78,7 @@ export async function sendConfirmacionTurno({
         Accept: "application/json",
       },
       body: JSON.stringify({
-        sender: { name: "Clínica System", email: "devsistematurnos@gmail.com" },
+        sender: { name: "Clínica System", email: "softwaredesarrollo8@gmail.com" },
         to: [{ email: email_paciente }],
         subject: `Confirmación de turno`,
         htmlContent,

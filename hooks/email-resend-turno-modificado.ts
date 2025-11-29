@@ -72,7 +72,7 @@ export async function sendAvisoModificado({
       body: JSON.stringify({
         sender: {
           name: "Clínica System",
-          email: "devsistematurnos@gmail.com",
+          email: "softwaredesarrollo8@gmail.com",
         },
         to: [{ email: email_paciente }],
         subject: `Turno modificado`,
