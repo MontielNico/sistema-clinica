@@ -25,7 +25,7 @@ export async function sendTurnoPendientePagoPorConvenioNotification({
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #2563eb; margin: 0;">🏥 Clínica System</h1>
+          <h1 style="color: #2563eb; margin: 0;">🏥 Turns Med Manager</h1>
           <p style="color: #64748b; margin: 5px 0;">Sistema de Turnos</p>
         </div>
         <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
