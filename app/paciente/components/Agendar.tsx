@@ -187,15 +187,18 @@ const Agendar = ({
           }
         );
         const json = await res.json();
+        const hoy = new Date().toISOString().split("T")[0];
 
-        const parsed = json.map((item:any)=>({
-          id_obra: item.obra_social?.id_obra,
-          descripcion: item.obra_social?.descripcion,
-          estado: item.obra_social?.estado,
-          telefono_contacto: item.obra_social?.telefono_contacto,
-          sitio_web: item.obra_social?.sitio_web,
-          fecha_alta: item.fecha_alta,
-        }));
+        const parsed = json
+          .filter((item:any) => item.obra_social?.estado === "Habilitado" && item.fecha_alta < hoy)
+          .map((item:any)=>({
+            id_obra: item.obra_social?.id_obra,
+            descripcion: item.obra_social?.descripcion,
+            estado: item.obra_social?.estado,
+            telefono_contacto: item.obra_social?.telefono_contacto,
+            sitio_web: item.obra_social?.sitio_web,
+            fecha_alta: item.fecha_alta,
+          }));
 
         if (!res.ok) throw new Error(json.error || "Error al obtener obras sociales");
         setObrasSociales(parsed);
