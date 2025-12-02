@@ -92,7 +92,7 @@ export default function PacienteTab() {
           <TableBody>
             {pacientes.map((paciente: any) => (
               <TableRow key={paciente.id}>
-                <TableCell className="font-medium">{paciente.nombre}</TableCell>
+                <TableCell className="font-medium"> {paciente.nombre} {paciente.apellido} </TableCell>
                 <TableCell>{paciente.email}</TableCell>
                 <TableCell>{paciente.telefono}</TableCell>
                 <TableCell>
