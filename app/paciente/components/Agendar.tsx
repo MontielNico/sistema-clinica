@@ -190,7 +190,7 @@ const Agendar = ({
         const hoy = new Date().toISOString().split("T")[0];
 
         const parsed = json
-          .filter((item:any) => item.obra_social?.estado === "Habilitado" && item.fecha_alta < hoy)
+          .filter((item:any) => item.obra_social?.estado === "Habilitado" && item.fecha_alta <= hoy)
           .map((item:any)=>({
             id_obra: item.obra_social?.id_obra,
             descripcion: item.obra_social?.descripcion,
