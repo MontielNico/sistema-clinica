@@ -170,6 +170,21 @@ export function AddMedicoForm({
       return;
     }
 
+    // validar que dni y tarifa sean números positivos
+    const dniNum = Number(dni);
+    if (isNaN(dniNum) || dniNum <= 0) {
+      setError("El DNI debe ser un número positivo");
+      setIsLoading(false);
+      return;
+    }
+
+    const pesosNum = Number(pesosArgentinos);
+    if (isNaN(pesosNum) || pesosNum <= 0) {
+      setError("La tarifa debe ser un número mayor a 0");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       // Construccion final de la matricula con el tipoMatricula
       const construirMatriculaConPrefijo = (
@@ -356,8 +371,14 @@ export function AddMedicoForm({
                   type="text"
                   placeholder="Ej: 12345678"
                   required
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={dni}
-                  onChange={(e) => setDni(e.target.value)}
+                  onChange={(e) => {
+                    // sólo permitir dígitos, sin signo negativo
+                    const cleaned = e.target.value.replace(/\D/g, "");
+                    setDni(cleaned);
+                  }}
                 />
               </div>
 
@@ -381,10 +402,16 @@ export function AddMedicoForm({
                 <Input
                   id="matricula"
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   placeholder="Ej: 123456"
                   required
                   value={matricula}
-                  onChange={(e) => setMatricula(e.target.value)}
+                  onChange={(e) => {
+                    // permitir sólo dígitos en la matrícula
+                    const cleaned = String(e.target.value).replace(/\D/g, "");
+                    setMatricula(cleaned);
+                  }}
                 />
               </div>
 
@@ -396,8 +423,14 @@ export function AddMedicoForm({
                   type="tel"
                   placeholder="Ej: +54 11 1234-5678"
                   required
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={telefono}
-                  onChange={(e) => setTelefono(e.target.value)}
+                  onChange={(e) => {
+                    // permitir sólo dígitos (elimina signos, espacios y guiones)
+                    const cleaned = String(e.target.value).replace(/\D/g, "");
+                    setTelefono(cleaned);
+                  }}
                 />
               </div>
 
@@ -409,10 +442,18 @@ export function AddMedicoForm({
                 <Input
                   id="pesosArgentinos"
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   placeholder="Ej: 15000"
                   required
+                  min="1"
+                  step="1"
                   value={pesosArgentinos}
-                  onChange={(e) => setPesosArgentinos(e.target.value)}
+                  onChange={(e) => {
+                    // limpiar cualquier carácter no numérico y evitar negativos
+                    const cleaned = String(e.target.value).replace(/[^0-9]/g, "");
+                    setPesosArgentinos(cleaned);
+                  }}
                 />
               </div>
 

@@ -479,12 +479,16 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
                         <Input
                             id="pesosArgentinos"
                             type="number"
-                            min="0"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            min="1"
                             step="1"
                             value={datosTemp.tarifa === 0 ? "" : datosTemp.tarifa}
                             onChange={(e) => {
-                                const v = e.target.value;
-                                const num = v === "" ? 0 : Number(v);
+                                // Permitimos sólo dígitos (sin signo negativo) y guardamos un entero >= 0
+                                const raw = e.target.value;
+                                const cleaned = String(raw).replace(/[^0-9]/g, "");
+                                const num = cleaned === "" ? 0 : Math.floor(Number(cleaned));
                                 setDatosTemp({ ...datosTemp, tarifa: num });
                             }}
                         />
