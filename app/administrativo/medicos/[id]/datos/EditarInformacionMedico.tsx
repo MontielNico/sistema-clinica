@@ -244,10 +244,13 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
 
             if (guardadoExitoso) {
                 setEditando(false);
+                setExito(true);
                 if (onGuardar) {
                     onGuardar(datosParaValidar);
                 }
-                router.push("/administrativo/dashboard?tab=medicos");
+                setTimeout(() => {
+                    router.push("/administrativo/dashboard?tab=medicos");
+                }, 2000);
             } else {
                 setDatosTemp(datos);
                 setError("Error guardando en el servidor. Revisá la consola del servidor.");
@@ -606,7 +609,7 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
                     {exito && (
                         <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
                         <p className="text-sm">
-                            Médico creado exitosamente. Redirigiendo...
+                            Cambios guardados exitosamente. Redirigiendo...
                         </p>
                         </div>
                     )}
