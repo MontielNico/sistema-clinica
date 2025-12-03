@@ -351,6 +351,7 @@ const modificarDatosMedico: React.FC<EditarInformacionProps> = ({
                 <ArrowLeft className="h-4 w-4" />
                 Cancelar
             </Button>
+            <hr />
         </div>
         <Card className="max-w-2xl mx-auto mt-8 shadow-md rounded-xl">
             <CardHeader>

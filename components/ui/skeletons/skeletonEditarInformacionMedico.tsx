@@ -9,16 +9,16 @@ export default function SkeletonEditarInformacionMedico() {
     <>
       {/* Botón cancelar */}
       <div className="flex justify-start">
-        <Skeleton className="h-10 w-28 rounded-md" />
+        <Skeleton className="h-10 w-28 rounded-md bg-neutral-300" />
       </div>
 
       <Card className="max-w-2xl mx-auto mt-8 shadow-md rounded-xl">
         <CardHeader>
           <CardTitle>
-            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-6 w-40 bg-neutral-300" />
           </CardTitle>
           <CardDescription>
-            <Skeleton className="h-4 w-56 mt-2" />
+            <Skeleton className="h-4 w-56 mt-2 bg-neutral-300" />
           </CardDescription>
         </CardHeader>
 
@@ -27,39 +27,39 @@ export default function SkeletonEditarInformacionMedico() {
 
             {/* Nombre */}
             <div className="grid gap-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-4 w-20 bg-neutral-300" />
+              <Skeleton className="h-10 w-full bg-neutral-300" />
             </div>
 
             {/* Apellido */}
             <div className="grid gap-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-4 w-24 bg-neutral-300" />
+              <Skeleton className="h-10 w-full bg-neutral-300" />
             </div>
 
             {/* DNI */}
             <div className="grid gap-2">
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-4 w-16 bg-neutral-300" />
+              <Skeleton className="h-10 w-full bg-neutral-300" />
             </div>
 
             {/* Matrícula */}
             <div className="grid gap-2">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-10 w-full" /> {/* Select */}
-              <Skeleton className="h-4 w-36 mt-2" />
-              <Skeleton className="h-10 w-full" /> {/* Input */}
-              <Skeleton className="h-3 w-48" />
+              <Skeleton className="h-4 w-32 bg-neutral-300" />
+              <Skeleton className="h-10 w-full bg-neutral-300" /> {/* Select */}
+              <Skeleton className="h-4 w-36 mt-2 bg-neutral-300" />
+              <Skeleton className="h-10 w-full bg-neutral-300" /> {/* Input */}
+              <Skeleton className="h-3 w-48 bg-neutral-300" />
             </div>
 
             {/* Especialidades */}
             <div className="grid gap-3">
-              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-28 bg-neutral-300" />
               <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto border rounded-lg p-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded-full" />
-                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-5 w-5 rounded-full bg-neutral-300" />
+                    <Skeleton className="h-4 w-32 bg-neutral-300" />
                   </div>
                 ))}
               </div>
@@ -67,31 +67,31 @@ export default function SkeletonEditarInformacionMedico() {
 
             {/* Teléfono */}
             <div className="grid gap-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-4 w-20 bg-neutral-300" />
+              <Skeleton className="h-10 w-full bg-neutral-300" />
             </div>
 
             {/* Tarifa */}
             <div className="grid gap-2">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-4 w-28 bg-neutral-300" />
+              <Skeleton className="h-10 w-full bg-neutral-300" />
             </div>
 
             {/* Convenios */}
             <div className="grid gap-4 mt-6">
-              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-4 w-40 bg-neutral-300" />
               <div className="flex justify-end">
-                <Skeleton className="h-8 w-32 rounded-md" />
+                <Skeleton className="h-8 w-32 rounded-md bg-neutral-300" />
               </div>
 
               <div className="border rounded-lg divide-y">
                 {Array.from({ length: 2 }).map((_, i) => (
                   <div key={i} className="flex items-center justify-between p-3">
                     <div>
-                      <Skeleton className="h-4 w-40" />
-                      <Skeleton className="h-4 w-32 mt-2" />
+                      <Skeleton className="h-4 w-40 bg-neutral-300" />
+                      <Skeleton className="h-4 w-32 mt-2 bg-neutral-300" />
                     </div>
-                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <Skeleton className="h-8 w-8 rounded-md bg-neutral-300" />
                   </div>
                 ))}
               </div>
@@ -99,8 +99,8 @@ export default function SkeletonEditarInformacionMedico() {
 
             {/* Botones */}
             <div className="flex gap-3 mt-4">
-              <Skeleton className="h-10 w-full rounded-md" />
-              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="h-10 w-full rounded-md bg-neutral-300" />
+              <Skeleton className="h-10 w-full rounded-md bg-neutral-300" />
             </div>
           </div>
         </CardContent>

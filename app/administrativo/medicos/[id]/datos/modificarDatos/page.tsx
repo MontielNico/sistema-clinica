@@ -85,6 +85,7 @@ export default function Page() {
 	return (
 		<div className="p-4">
 			<h1 className="text-2xl font-bold mb-4">Modificar datos del médico</h1>
+			<hr className="mb-5"/>
 			<EditarInformacionMedico
 				legajo_medico={legajo}
 				datos={datos}

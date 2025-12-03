@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SinAusencias from "@/components/no-abscens";
+import SkeletonHistorialAusencias from "@/components/ui/skeletons/skeletonHistorial";
 
 export default function HistorialAusencias({ params }: { params: { id: string } }) {
   const [data, setData] = useState<any>(null);
@@ -25,7 +26,7 @@ export default function HistorialAusencias({ params }: { params: { id: string } 
 
   if (loading) return <div>
     <GeneralHeader/>
-    <hr />
+    <SkeletonHistorialAusencias/>
   </div>;
   if (data?.error) return <p>{data.error}</p>;
 
