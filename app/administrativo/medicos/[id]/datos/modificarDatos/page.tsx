@@ -1,8 +1,10 @@
 "use client";
+import SkeletonEditarInformacionDeMedico from "@/components/ui/skeletons/skeletonEditarInformacionMedico";
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import EditarInformacionMedico from "../EditarInformacionMedico";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DatosEditables {
 	nombre: string;
@@ -67,7 +69,7 @@ export default function Page() {
 	}, [legajo]);
 
 	if (loading) {
-		return <div className="p-4">Cargando información del médico...</div>;
+		return <SkeletonEditarInformacionDeMedico/>;
 	}
 
 	
